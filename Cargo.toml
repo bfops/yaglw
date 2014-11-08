@@ -1,0 +1,14 @@
+[package]
+name = "glw"
+version = "0.0.0"
+authors = [
+    "Clark Gaebel <cg.wowus.cg@gmail.com>",
+    "Ben Foppa <benjamin.foppa@gmail.com>",
+  ]
+
+[lib]
+name = "glw"
+path = "src/lib.rs"
+
+[dependencies.gl]
+git = "https://github.com/bjz/gl-rs"
