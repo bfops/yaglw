@@ -82,7 +82,7 @@ pub struct BufferTexture<'a, T> {
 
 impl<'a, T> BufferTexture<'a, T> {
   pub fn new<'b: 'a>(
-    gl: &'b GLContext,
+    gl: &'b mut GLContext,
     format: GLenum,
     capacity: uint,
   ) -> BufferTexture<'a, T> {

@@ -54,7 +54,10 @@ pub struct GLByteBuffer<'a> {
 impl<'a> GLByteBuffer<'a> {
   /// Creates a new array of objects on the GPU.
   /// capacity is provided in units of size slice_span.
-  pub fn new<'b: 'a>(gl: &'b GLContext, capacity: uint) -> GLByteBuffer<'a> {
+  pub fn new<'b: 'a>(
+    gl: &'b mut GLContext,
+    capacity: uint,
+  ) -> GLByteBuffer<'a> {
     let handle = BufferHandle::new(gl);
 
     unsafe {
@@ -82,7 +85,7 @@ impl<'a> GLByteBuffer<'a> {
   }
 
   /// Add more data into this buffer.
-  pub unsafe fn push(&mut self, vs: *const u8, count: uint) {
+  pub unsafe fn push(&mut self, gl: &mut GLContext, vs: *const u8, count: uint) {
     assert!(
       self.length + count <= self.capacity,
       "GLByteBuffer::push {} into a {}/{} full GLByteBuffer",
@@ -91,11 +94,11 @@ impl<'a> GLByteBuffer<'a> {
       self.capacity
     );
 
-    self.update_inner(self.length, vs, count);
+    self.update_inner(gl, self.length, vs, count);
     self.length += count;
   }
 
-  pub fn swap_remove(&mut self, i: uint, count: uint) {
+  pub fn swap_remove(&mut self, _gl: &mut GLContext, i: uint, count: uint) {
     assert!(count <= self.length);
     self.length -= count;
     assert!(i <= self.length);
@@ -123,12 +126,18 @@ impl<'a> GLByteBuffer<'a> {
     }
   }
 
-  pub unsafe fn update(&self, idx: uint, vs: *const u8, count: uint) {
+  pub unsafe fn update(&self, gl: &mut GLContext, idx: uint, vs: *const u8, count: uint) {
     assert!(idx + count <= self.length);
-    self.update_inner(idx, vs, count);
+    self.update_inner(gl, idx, vs, count);
   }
 
-  unsafe fn update_inner(&self, idx: uint, vs: *const u8, count: uint) {
+  unsafe fn update_inner(
+    &self,
+    _gl: &mut GLContext,
+    idx: uint,
+    vs: *const u8,
+    count: uint,
+  ) {
     assert!(idx + count <= self.capacity);
 
     gl::BindBuffer(gl::ARRAY_BUFFER, self.handle.gl_id);
@@ -149,16 +158,17 @@ pub struct GLBuffer<'a, T> {
 }
 
 impl<'a, T> GLBuffer<'a, T> {
-  pub fn new<'b: 'a>(gl: &'b GLContext, capacity: uint) -> GLBuffer<'a, T> {
+  pub fn new<'b: 'a>(gl: &'b mut GLContext, capacity: uint) -> GLBuffer<'a, T> {
     GLBuffer {
       byte_buffer: GLByteBuffer::new(gl, capacity * mem::size_of::<T>()),
       length: 0,
     }
   }
 
-  pub fn push(&mut self, vs: &[T]) {
+  pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) {
     unsafe {
       self.byte_buffer.push(
+        gl,
         mem::transmute(vs.as_ptr()),
         mem::size_of::<T>() * vs.len()
       );
@@ -166,9 +176,10 @@ impl<'a, T> GLBuffer<'a, T> {
     self.length += vs.len();
   }
 
-  pub fn update(&mut self, idx: uint, vs: &[T]) {
+  pub fn update(&mut self, gl: &mut GLContext, idx: uint, vs: &[T]) {
     unsafe {
       self.byte_buffer.update(
+        gl,
         mem::size_of::<T>() * idx,
         mem::transmute(vs.as_ptr()),
         mem::size_of::<T>() * vs.len(),
@@ -176,8 +187,9 @@ impl<'a, T> GLBuffer<'a, T> {
     }
   }
 
-  pub fn swap_remove(&mut self, idx: uint, count: uint) {
+  pub fn swap_remove(&mut self, gl: &mut GLContext, idx: uint, count: uint) {
     self.byte_buffer.swap_remove(
+      gl,
       mem::size_of::<T>() * idx,
       mem::size_of::<T>() * count,
     );
@@ -286,7 +298,7 @@ impl<'a, T> GLArray<'a, T> {
   /// Creates a new array of objects on the GPU.
   /// capacity is provided in units of size slice_span.
   pub fn new<'b: 'a>(
-    gl: &'b GLContext,
+    gl: &'b mut GLContext,
     shader_program: Rc<RefCell<Shader>>,
     attribs: &[VertexAttribData],
     mode: DrawMode,
@@ -356,23 +368,23 @@ impl<'a, T> GLArray<'a, T> {
     }
   }
 
-  pub fn push(&mut self, vs: &[T]) {
-    self.buffer.push(vs);
+  pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) {
+    self.buffer.push(gl, vs);
     self.length += vs.len() * self.attrib_span;
   }
 
-  pub fn swap_remove(&mut self, idx: uint, count: uint) {
-    self.buffer.swap_remove(idx, count);
+  pub fn swap_remove(&mut self, gl: &mut GLContext, idx: uint, count: uint) {
+    self.buffer.swap_remove(gl, idx, count);
     self.length -= count * self.attrib_span;
   }
 
   /// Draws all the queued triangles to the screen.
-  pub fn draw(&self, gl: &GLContext) {
+  pub fn draw(&self, gl: &mut GLContext) {
     self.draw_slice(gl, 0, self.buffer.length);
   }
 
   /// Draw some subset of the triangle array.
-  pub fn draw_slice(&self, _gl: &GLContext, start: uint, len: uint) {
+  pub fn draw_slice(&self, _gl: &mut GLContext, start: uint, len: uint) {
     assert!(start + len <= self.length);
 
     unsafe {
