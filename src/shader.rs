@@ -142,14 +142,12 @@ impl<'a> Shader<'a> {
 
   pub fn get_uniform_location(
     &mut self,
-    gl: &mut GLContext,
     name: &'static str,
   ) -> GLint {
     let s_name = String::from_str(name);
     let name = name.to_c_str().as_ptr();
     match self.uniforms.get(&s_name) {
       None => {
-        self.use_shader(gl);
         let loc = unsafe { gl::GetUniformLocation(self.handle.gl_id, name) };
         assert!(loc != -1, "couldn't find shader uniform: {}", s_name);
 
