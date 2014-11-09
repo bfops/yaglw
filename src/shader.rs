@@ -140,7 +140,7 @@ impl<'a> Shader<'a> {
     }
   }
 
-  pub fn get_uniform_location<T>(
+  pub fn get_uniform_location(
     &mut self,
     gl: &mut GLContext,
     name: &'static str,
