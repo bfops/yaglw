@@ -140,29 +140,23 @@ impl<'a> Shader<'a> {
     }
   }
 
-  pub fn with_uniform_location<T>(
+  pub fn get_uniform_location<T>(
     &mut self,
     gl: &mut GLContext,
     name: &'static str,
-    f: |GLint| -> T,
-  ) -> T {
+  ) -> GLint {
     let s_name = String::from_str(name);
     let name = name.to_c_str().as_ptr();
-    let t = match self.uniforms.get(&s_name) {
+    match self.uniforms.get(&s_name) {
       None => {
         self.use_shader(gl);
         let loc = unsafe { gl::GetUniformLocation(self.handle.gl_id, name) };
         assert!(loc != -1, "couldn't find shader uniform: {}", s_name);
 
         self.uniforms.insert(s_name, loc);
-        f(loc)
+        loc
       },
-      Some(&loc) => {
-        self.use_shader(gl);
-        f(loc)
-      }
-    };
-
-    t
+      Some(&loc) => loc,
+    }
   }
 }
