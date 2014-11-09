@@ -17,6 +17,8 @@ impl<'a> ProgramHandle<'a> {
       gl::CreateProgram()
     };
 
+    assert!(gl_id != 0);
+
     ProgramHandle {
       gl_id: gl_id,
       lifetime: ContravariantLifetime,
@@ -47,6 +49,9 @@ impl<'a> ShaderHandle<'a> {
     let gl_id = unsafe {
       gl::CreateShader(typ)
     };
+
+    assert!(gl_id != 0);
+
     // Attempt to compile the shader
     shader_source.with_c_str(|ptr| unsafe { gl::ShaderSource(gl_id, 1, &ptr, ptr::null()) });
     unsafe {
@@ -96,29 +101,6 @@ pub struct Shader<'a> {
 }
 
 impl<'a> Shader<'a> {
-  pub fn new_test(
-    _gl: &'a GLContextExistence,
-    _gl_context: &mut GLContext,
-  ) -> Shader<'a> {
-    let handle = ProgramHandle {
-      gl_id: 0,
-      lifetime: ContravariantLifetime,
-    };
-    let s = ShaderHandle {
-      gl_id: 0,
-      lifetime: ContravariantLifetime,
-    };
-    let mut components = Vec::new();
-    components.push(s);
-
-    Shader {
-      handle: handle,
-      components: components,
-      uniforms: HashMap::new(),
-      lifetime: ContravariantLifetime,
-    }
-  }
-
   pub fn new<T: Iterator<(String, GLenum)>>(
     gl: &'a GLContextExistence,
     shader_components: T,
@@ -178,7 +160,9 @@ impl<'a> Shader<'a> {
     let name = name.to_c_str().as_ptr();
     match self.uniforms.get(&s_name) {
       None => {
-        let loc = unsafe { gl::GetUniformLocation(self.handle.gl_id, name) };
+        let loc = unsafe {
+          gl::GetUniformLocation(self.handle.gl_id, name)
+        };
         assert!(loc != -1, "couldn't find shader uniform: {}", s_name);
 
         self.uniforms.insert(s_name, loc);

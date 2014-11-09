@@ -29,8 +29,9 @@ pub struct GLContextExistence;
 
 pub struct GLContext;
 
+// TODO(bfops): Safely create GLContext from existing ones, e.g. sdl2::video::GLContext.
 impl GLContext {
-  pub fn new() -> (GLContextExistence, GLContext) {
+  pub unsafe fn new() -> (GLContextExistence, GLContext) {
     // TODO(cgaebel): Have a thread-local variable checking whether or not
     // there is only one GLContext, and fail if there's more than one.
     (GLContextExistence, GLContext)
