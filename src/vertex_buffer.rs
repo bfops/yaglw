@@ -1,8 +1,9 @@
 use gl;
 use gl::types::*;
-use gl_context::*;
+use gl_context::{GLContext, GLContextExistence};
 use shader::*;
 use std::cell::RefCell;
+use std::kinds::marker::ContravariantLifetime;
 use std::mem;
 use std::ptr;
 use std::rc::Rc;
@@ -15,10 +16,11 @@ pub fn glGetAttribLocation(shader_program: GLuint, name: &str) -> GLint {
 
 pub struct BufferHandle<'a> {
   pub gl_id: GLuint,
+  pub lifetime: ContravariantLifetime<'a>,
 }
 
 impl<'a> BufferHandle<'a> {
-  pub fn new<'b: 'a>(_gl: &'b GLContext) -> BufferHandle<'a> {
+  pub fn new(_gl: &'a GLContextExistence) -> BufferHandle<'a> {
     let mut gl_id = 0;
 
     unsafe {
@@ -29,6 +31,7 @@ impl<'a> BufferHandle<'a> {
 
     BufferHandle {
       gl_id: gl_id,
+      lifetime: ContravariantLifetime,
     }
   }
 }
@@ -54,8 +57,9 @@ pub struct GLByteBuffer<'a> {
 impl<'a> GLByteBuffer<'a> {
   /// Creates a new array of objects on the GPU.
   /// capacity is provided in units of size slice_span.
-  pub fn new<'b: 'a>(
-    gl: &'b mut GLContext,
+  pub fn new(
+    gl: &'a GLContextExistence,
+    gl_context: &mut GLContext,
     capacity: uint,
   ) -> GLByteBuffer<'a> {
     let handle = BufferHandle::new(gl);
@@ -71,7 +75,7 @@ impl<'a> GLByteBuffer<'a> {
       );
     }
 
-    match gl.get_error() {
+    match gl_context.get_error() {
       gl::NO_ERROR => {},
       gl::OUT_OF_MEMORY => panic!("Out of VRAM"),
       err => panic!("OpenGL error 0x{:x}", err),
@@ -158,9 +162,13 @@ pub struct GLBuffer<'a, T> {
 }
 
 impl<'a, T> GLBuffer<'a, T> {
-  pub fn new<'b: 'a>(gl: &'b mut GLContext, capacity: uint) -> GLBuffer<'a, T> {
+  pub fn new(
+    gl: &'a GLContextExistence,
+    gl_context: &mut GLContext,
+    capacity: uint,
+  ) -> GLBuffer<'a, T> {
     GLBuffer {
-      byte_buffer: GLByteBuffer::new(gl, capacity * mem::size_of::<T>()),
+      byte_buffer: GLByteBuffer::new(gl, gl_context, capacity * mem::size_of::<T>()),
       length: 0,
     }
   }
@@ -257,11 +265,12 @@ pub struct VertexAttribData<'a> {
 }
 
 pub struct ArrayHandle<'a> {
+  pub lifetime: ContravariantLifetime<'a>,
   pub gl_id: GLuint,
 }
 
 impl<'a> ArrayHandle<'a> {
-  pub fn new<'b: 'a>(_gl: &'b GLContext) -> ArrayHandle<'a> {
+  pub fn new(_gl: &'a GLContextExistence) -> ArrayHandle<'a> {
     let mut gl_id = 0;
     unsafe {
       gl::GenVertexArrays(1, &mut gl_id);
@@ -269,6 +278,7 @@ impl<'a> ArrayHandle<'a> {
 
     ArrayHandle {
       gl_id: gl_id,
+      lifetime: ContravariantLifetime,
     }
   }
 }
@@ -297,8 +307,9 @@ pub struct GLArray<'a, T> {
 impl<'a, T> GLArray<'a, T> {
   /// Creates a new array of objects on the GPU.
   /// capacity is provided in units of size slice_span.
-  pub fn new<'b: 'a>(
-    gl: &'b mut GLContext,
+  pub fn new(
+    gl: &'a GLContextExistence,
+    _gl_context: &mut GLContext,
     shader_program: Rc<RefCell<Shader>>,
     attribs: &[VertexAttribData],
     mode: DrawMode,

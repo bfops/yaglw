@@ -25,14 +25,15 @@ unsafe fn from_c_str<'a>(s: *const u8) -> &'a str {
 
 /// A handle to an OpenGL context. Only create one of these per thread.
 #[deriving(Send)]
+pub struct GLContextExistence;
+
 pub struct GLContext;
 
 impl GLContext {
-  /// Create a new OpenGL context.
-  pub fn new() -> GLContext {
+  pub fn new() -> (GLContextExistence, GLContext) {
     // TODO(cgaebel): Have a thread-local variable checking whether or not
     // there is only one GLContext, and fail if there's more than one.
-    GLContext
+    (GLContextExistence, GLContext)
   }
 
   /// Stops the processing of any triangles hidden from view when rendering.
