@@ -36,51 +36,68 @@ impl Add<u32, TextureUnit> for TextureUnit {
 }
 
 /// A GPU-allocated texture.
-pub struct Texture {
+pub struct TextureHandle<'a> {
   pub gl_id: GLuint,
 }
 
-impl Texture {
-  pub fn bind_2d(&self, _gl: &GLContext) {
-    unsafe { gl::BindTexture(gl::TEXTURE_2D, self.gl_id); }
-  }
-
-  #[allow(dead_code)]
-  pub fn bind_3d(&self, _gl: &GLContext) {
-    unsafe { gl::BindTexture(gl::TEXTURE_3D, self.gl_id); }
+impl<'a> TextureHandle<'a> {
+  pub fn new<'b: 'a>(_gl: &'b GLContext) -> TextureHandle<'a> {
+    let mut handle = 0;
+    unsafe {
+      gl::GenTextures(1, &mut handle);
+    }
+    TextureHandle {
+      gl_id: handle,
+    }
   }
 }
 
-impl Drop for Texture {
+#[unsafe_destructor]
+impl<'a> Drop for TextureHandle<'a> {
   fn drop(&mut self) {
-    unsafe { gl::DeleteTextures(1, &self.gl_id); }
+    unsafe {
+      gl::DeleteTextures(1, &self.gl_id);
+    }
+  }
+}
+
+/// A GPU-allocated texture.
+pub struct Texture2D<'a> {
+  pub handle: TextureHandle<'a>,
+}
+
+impl<'a> Texture2D<'a> {
+  pub fn new<'b: 'a>(gl: &'b GLContext) -> Texture2D<'a> {
+    Texture2D {
+      handle: TextureHandle::new(gl),
+    }
   }
 }
 
 /// See the OpenGL docs on buffer textures.
-pub struct BufferTexture<T> {
-  pub texture: Texture,
-  pub buffer: GLBuffer<T>,
+pub struct BufferTexture<'a, T> {
+  pub handle: TextureHandle<'a>,
+  pub buffer: GLBuffer<'a, T>,
 }
 
-impl<T> BufferTexture<T> {
-  pub fn new(_gl: &GLContext, format: GLenum, capacity: uint) -> BufferTexture<T> {
+impl<'a, T> BufferTexture<'a, T> {
+  pub fn new<'b: 'a>(
+    gl: &'b GLContext,
+    format: GLenum,
+    capacity: uint,
+  ) -> BufferTexture<'a, T> {
     // TODO: enforce that `format` matches T.
 
-    let buffer = GLBuffer::new(capacity);
-
-    let mut gl_id = 0;
-    unsafe {
-      gl::GenTextures(1, &mut gl_id);
-    }
+    let buffer = GLBuffer::new(gl, capacity);
+    let handle = TextureHandle::new(gl);
 
     unsafe {
-      gl::BindTexture(gl::TEXTURE_BUFFER, gl_id);
-      gl::TexBuffer(gl::TEXTURE_BUFFER, format, buffer.byte_buffer.gl_id);
+      gl::BindTexture(gl::TEXTURE_BUFFER, handle.gl_id);
+      gl::TexBuffer(gl::TEXTURE_BUFFER, format, buffer.byte_buffer.handle.gl_id);
     }
 
     BufferTexture {
-      texture: Texture { gl_id: gl_id },
+      handle: handle,
       buffer: buffer,
     }
   }

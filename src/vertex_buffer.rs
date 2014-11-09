@@ -7,27 +7,18 @@ use std::mem;
 use std::ptr;
 use std::rc::Rc;
 
-// TODO: Don't 1-1 vertex array objects with vertex buffers
-
 /// Gets the id number for a given input of the shader program.
 #[allow(non_snake_case)]
 pub fn glGetAttribLocation(shader_program: GLuint, name: &str) -> GLint {
   name.with_c_str(|ptr| unsafe { gl::GetAttribLocation(shader_program, ptr) })
 }
 
-/// Fixed-size VRAM buffer for individual bytes.
-pub struct GLByteBuffer {
-  pub gl_id: u32,
-  /// number of bytes in the buffer.
-  pub length: uint,
-  /// maximum number of bytes in the buffer.
-  pub capacity: uint,
+pub struct BufferHandle<'a> {
+  pub gl_id: GLuint,
 }
 
-impl GLByteBuffer {
-  /// Creates a new array of objects on the GPU.
-  /// capacity is provided in units of size slice_span.
-  pub fn new(capacity: uint) -> GLByteBuffer {
+impl<'a> BufferHandle<'a> {
+  pub fn new<'b: 'a>(_gl: &'b GLContext) -> BufferHandle<'a> {
     let mut gl_id = 0;
 
     unsafe {
@@ -36,8 +27,38 @@ impl GLByteBuffer {
 
     assert!(gl_id != 0);
 
+    BufferHandle {
+      gl_id: gl_id,
+    }
+  }
+}
+
+#[unsafe_destructor]
+impl<'a> Drop for BufferHandle<'a> {
+  fn drop(&mut self) {
     unsafe {
-      gl::BindBuffer(gl::ARRAY_BUFFER, gl_id);
+      gl::DeleteBuffers(1, &self.gl_id);
+    }
+  }
+}
+
+/// Fixed-size VRAM buffer for individual bytes.
+pub struct GLByteBuffer<'a> {
+  pub handle: BufferHandle<'a>,
+  /// number of bytes in the buffer.
+  pub length: uint,
+  /// maximum number of bytes in the buffer.
+  pub capacity: uint,
+}
+
+impl<'a> GLByteBuffer<'a> {
+  /// Creates a new array of objects on the GPU.
+  /// capacity is provided in units of size slice_span.
+  pub fn new<'b: 'a>(gl: &'b GLContext, capacity: uint) -> GLByteBuffer<'a> {
+    let handle = BufferHandle::new(gl);
+
+    unsafe {
+      gl::BindBuffer(gl::ARRAY_BUFFER, handle.gl_id);
 
       gl::BufferData(
         gl::ARRAY_BUFFER,
@@ -47,14 +68,14 @@ impl GLByteBuffer {
       );
     }
 
-    match unsafe { gl::GetError() } {
+    match gl.get_error() {
       gl::NO_ERROR => {},
       gl::OUT_OF_MEMORY => panic!("Out of VRAM"),
       err => panic!("OpenGL error 0x{:x}", err),
     }
 
     GLByteBuffer {
-      gl_id: gl_id,
+      handle: handle,
       length: 0,
       capacity: capacity,
     }
@@ -89,7 +110,7 @@ impl GLByteBuffer {
       );
 
       unsafe {
-        gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_id);
+        gl::BindBuffer(gl::ARRAY_BUFFER, self.handle.gl_id);
 
         gl::CopyBufferSubData(
           gl::ARRAY_BUFFER,
@@ -110,7 +131,7 @@ impl GLByteBuffer {
   unsafe fn update_inner(&self, idx: uint, vs: *const u8, count: uint) {
     assert!(idx + count <= self.capacity);
 
-    gl::BindBuffer(gl::ARRAY_BUFFER, self.gl_id);
+    gl::BindBuffer(gl::ARRAY_BUFFER, self.handle.gl_id);
 
     gl::BufferSubData(
       gl::ARRAY_BUFFER,
@@ -121,26 +142,16 @@ impl GLByteBuffer {
   }
 }
 
-#[unsafe_destructor]
-impl Drop for GLByteBuffer {
-  #[inline]
-  fn drop(&mut self) {
-    unsafe {
-      gl::DeleteBuffers(1, &self.gl_id);
-    }
-  }
-}
-
 /// Fixed-size typed VRAM buffer, optimized for bulk inserts.
-pub struct GLBuffer<T> {
-  pub byte_buffer: GLByteBuffer,
+pub struct GLBuffer<'a, T> {
+  pub byte_buffer: GLByteBuffer<'a>,
   pub length: uint,
 }
 
-impl<T> GLBuffer<T> {
-  pub fn new(capacity: uint) -> GLBuffer<T> {
+impl<'a, T> GLBuffer<'a, T> {
+  pub fn new<'b: 'a>(gl: &'b GLContext, capacity: uint) -> GLBuffer<'a, T> {
     GLBuffer {
-      byte_buffer: GLByteBuffer::new(capacity * mem::size_of::<T>()),
+      byte_buffer: GLByteBuffer::new(gl, capacity * mem::size_of::<T>()),
       length: 0,
     }
   }
@@ -233,10 +244,36 @@ pub struct VertexAttribData<'a> {
   pub unit: GLType,
 }
 
+pub struct ArrayHandle<'a> {
+  pub gl_id: GLuint,
+}
+
+impl<'a> ArrayHandle<'a> {
+  pub fn new<'b: 'a>(_gl: &'b GLContext) -> ArrayHandle<'a> {
+    let mut gl_id = 0;
+    unsafe {
+      gl::GenVertexArrays(1, &mut gl_id);
+    }
+
+    ArrayHandle {
+      gl_id: gl_id,
+    }
+  }
+}
+
+#[unsafe_destructor]
+impl<'a> Drop for ArrayHandle<'a> {
+  fn drop(&mut self) {
+    unsafe {
+      gl::DeleteVertexArrays(1, &self.gl_id);
+    }
+  }
+}
+
 /// A fixed-capacity array of bytes passed to OpenGL.
-pub struct GLArray<T> {
-  pub buffer: GLBuffer<T>,
-  pub gl_id: u32,
+pub struct GLArray<'a, T> {
+  pub buffer: GLBuffer<'a, T>,
+  pub handle: ArrayHandle<'a>,
   /// How to draw this buffer. Ex: gl::LINES, gl::TRIANGLES, etc.
   pub mode: GLenum,
   /// size of T in vertices
@@ -245,24 +282,20 @@ pub struct GLArray<T> {
   pub length: uint,
 }
 
-impl<T> GLArray<T> {
-  #[inline]
+impl<'a, T> GLArray<'a, T> {
   /// Creates a new array of objects on the GPU.
   /// capacity is provided in units of size slice_span.
-  pub fn new(
-    _gl: &GLContext,
+  pub fn new<'b: 'a>(
+    gl: &'b GLContext,
     shader_program: Rc<RefCell<Shader>>,
     attribs: &[VertexAttribData],
     mode: DrawMode,
-    buffer: GLBuffer<T>,
-  ) -> GLArray<T> {
-    let mut gl_id = 0;
-
-    // TODO(cgaebel): Error checking?
+    buffer: GLBuffer<'a, T>,
+  ) -> GLArray<'a, T> {
+    let handle = ArrayHandle::new(gl);
 
     unsafe {
-      gl::GenVertexArrays(1, &mut gl_id);
-      gl::BindVertexArray(gl_id);
+      gl::BindVertexArray(handle.gl_id);
     }
 
     let mut offset = 0;
@@ -274,8 +307,13 @@ impl<T> GLArray<T> {
       attrib_span
     };
     for attrib in attribs.iter() {
-      let shader_attrib = glGetAttribLocation(shader_program.deref().borrow().id, attrib.name) as GLuint;
+      let shader_attrib =
+        glGetAttribLocation(
+          shader_program.borrow().handle.gl_id,
+          attrib.name
+        );
       assert!(shader_attrib != -1, "shader attribute \"{}\" not found", attrib.name);
+      let shader_attrib = shader_attrib as GLuint;
 
       unsafe {
         gl::EnableVertexAttribArray(shader_attrib);
@@ -311,7 +349,7 @@ impl<T> GLArray<T> {
 
     GLArray {
       buffer: buffer,
-      gl_id: gl_id,
+      handle: handle,
       mode: mode.to_enum(),
       attrib_span: mem::size_of::<T>() / attrib_span,
       length: 0,
@@ -328,7 +366,6 @@ impl<T> GLArray<T> {
     self.length -= count * self.attrib_span;
   }
 
-  #[inline]
   /// Draws all the queued triangles to the screen.
   pub fn draw(&self, gl: &GLContext) {
     self.draw_slice(gl, 0, self.buffer.length);
@@ -339,20 +376,10 @@ impl<T> GLArray<T> {
     assert!(start + len <= self.length);
 
     unsafe {
-      gl::BindVertexArray(self.gl_id);
-      gl::BindBuffer(gl::ARRAY_BUFFER, self.buffer.byte_buffer.gl_id);
+      gl::BindVertexArray(self.handle.gl_id);
+      gl::BindBuffer(gl::ARRAY_BUFFER, self.buffer.byte_buffer.handle.gl_id);
 
       gl::DrawArrays(self.mode, (start * self.attrib_span) as i32, (len * self.attrib_span) as i32);
-    }
-  }
-}
-
-#[unsafe_destructor]
-impl<T> Drop for GLArray<T> {
-  #[inline]
-  fn drop(&mut self) {
-    unsafe {
-      gl::DeleteVertexArrays(1, &self.gl_id);
     }
   }
 }
