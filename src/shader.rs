@@ -103,15 +103,16 @@ pub struct Shader<'a> {
 impl<'a> Shader<'a> {
   pub fn new<T: Iterator<(String, GLenum)>>(
     gl: &'a GLContextExistence,
-    shader_components: T,
+    mut shader_components: T,
   ) -> Shader<'a> {
-    let mut shader_components = shader_components;
     let handle = ProgramHandle::new(gl);
 
     let mut components = Vec::new();
     for (content, component) in shader_components {
       let s = ShaderHandle::compile_from(gl, content, component);
-      unsafe { gl::AttachShader(handle.gl_id, s.gl_id) };
+      unsafe {
+        gl::AttachShader(handle.gl_id, s.gl_id);
+      }
       components.push(s);
     }
 
@@ -157,11 +158,12 @@ impl<'a> Shader<'a> {
     name: &'static str,
   ) -> GLint {
     let s_name = String::from_str(name);
-    let name = name.to_c_str().as_ptr();
+    let c_name = name.to_c_str();
+    let p_name = c_name.as_ptr();
     match self.uniforms.get(&s_name) {
       None => {
         let loc = unsafe {
-          gl::GetUniformLocation(self.handle.gl_id, name)
+          gl::GetUniformLocation(self.handle.gl_id, p_name)
         };
         assert!(loc != -1, "couldn't find shader uniform: {}", s_name);
 
