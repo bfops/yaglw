@@ -1,5 +1,5 @@
 [package]
-name = "glw"
+name = "yaglw"
 version = "0.0.0"
 authors = [
     "Clark Gaebel <cg.wowus.cg@gmail.com>",
@@ -7,7 +7,7 @@ authors = [
   ]
 
 [lib]
-name = "glw"
+name = "yaglw"
 path = "src/lib.rs"
 
 [dependencies.gl]
