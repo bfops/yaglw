@@ -20,7 +20,7 @@ unsafe fn from_c_str<'a>(s: *const u8) -> &'a str {
       len: len,
     };
 
-  str::raw::from_utf8(mem::transmute(as_slice))
+  str::from_utf8_unchecked(mem::transmute(as_slice))
 }
 
 /// A handle to an OpenGL context. Only create one of these per thread.
