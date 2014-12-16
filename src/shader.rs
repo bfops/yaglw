@@ -2,6 +2,7 @@ use gl;
 use gl::types::*;
 use gl_context::{GLContext, GLContextExistence};
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::kinds::marker::ContravariantLifetime;
 use std::ptr;
 use std::str;
@@ -158,19 +159,19 @@ impl<'a> Shader<'a> {
     name: &'static str,
   ) -> GLint {
     let s_name = String::from_str(name);
-    let c_name = name.to_c_str();
-    let p_name = c_name.as_ptr();
-    match self.uniforms.get(&s_name) {
-      None => {
+    // TODO: This shouldn't require a clone.
+    match self.uniforms.entry(s_name.clone()) {
+      Entry::Occupied(entry) => *entry.get(),
+      Entry::Vacant(entry) => {
+        let c_name = name.to_c_str();
+        let p_name = c_name.as_ptr();
         let loc = unsafe {
           gl::GetUniformLocation(self.handle.gl_id, p_name)
         };
         assert!(loc != -1, "couldn't find shader uniform: {}", s_name);
 
-        self.uniforms.insert(s_name, loc);
-        loc
+        *entry.set(loc)
       },
-      Some(&loc) => loc,
     }
   }
 }
