@@ -158,7 +158,6 @@ impl<'a> GLByteBuffer<'a> {
 /// Fixed-size typed VRAM buffer, optimized for bulk inserts.
 pub struct GLBuffer<'a, T> {
   pub byte_buffer: GLByteBuffer<'a>,
-  pub length: uint,
 }
 
 impl<'a, T> GLBuffer<'a, T> {
@@ -169,7 +168,6 @@ impl<'a, T> GLBuffer<'a, T> {
   ) -> GLBuffer<'a, T> {
     GLBuffer {
       byte_buffer: GLByteBuffer::new(gl, gl_context, capacity * mem::size_of::<T>()),
-      length: 0,
     }
   }
 
@@ -181,7 +179,6 @@ impl<'a, T> GLBuffer<'a, T> {
         mem::size_of::<T>() * vs.len()
       );
     }
-    self.length += vs.len();
   }
 
   pub fn update(&mut self, gl: &mut GLContext, idx: uint, vs: &[T]) {
@@ -201,7 +198,6 @@ impl<'a, T> GLBuffer<'a, T> {
       mem::size_of::<T>() * idx,
       mem::size_of::<T>() * count,
     );
-    self.length -= count;
   }
 }
 
@@ -391,7 +387,7 @@ impl<'a, T> GLArray<'a, T> {
 
   /// Draws all the queued triangles to the screen.
   pub fn draw(&self, gl: &mut GLContext) {
-    self.draw_slice(gl, 0, self.buffer.length);
+    self.draw_slice(gl, 0, self.length);
   }
 
   /// Draw some subset of the triangle array.
