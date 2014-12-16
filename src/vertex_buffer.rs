@@ -205,6 +205,8 @@ impl<'a, T> GLBuffer<'a, T> {
   }
 }
 
+#[deriving(Show)]
+#[deriving(Copy, Clone)]
 pub enum DrawMode {
   Lines,
   Triangles,
@@ -222,6 +224,7 @@ impl DrawMode {
 }
 
 #[deriving(Show)]
+#[deriving(Copy, Clone)]
 pub enum GLType {
   Float,
   UInt,

@@ -7,7 +7,7 @@ use vertex_buffer::GLBuffer;
 
 // TODO(cgaebel): Handle texture creation from an SDL surface.
 
-#[deriving(Clone)]
+#[deriving(Copy, Clone)]
 pub struct TextureUnit {
   pub glsl_id: GLuint,
 }
