@@ -301,9 +301,7 @@ pub struct GLArray<'a, T> {
   pub handle: ArrayHandle<'a>,
   /// How to draw this buffer. Ex: gl::LINES, gl::TRIANGLES, etc.
   pub mode: GLenum,
-  /// size of T in vertices
-  pub attrib_span: uint,
-  /// length in vertices
+  /// length in `T`s.
   pub length: uint,
 }
 
@@ -371,25 +369,24 @@ impl<'a, T> GLArray<'a, T> {
       err => panic!("OpenGL error 0x{:x}", err),
     }
 
-    assert!(mem::size_of::<T>() % attrib_span == 0);
+    assert_eq!(attrib_span, mem::size_of::<T>());
 
     GLArray {
       buffer: buffer,
       handle: handle,
       mode: mode.to_enum(),
-      attrib_span: mem::size_of::<T>() / attrib_span,
       length: 0,
     }
   }
 
   pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) {
     self.buffer.push(gl, vs);
-    self.length += vs.len() * self.attrib_span;
+    self.length += vs.len();
   }
 
   pub fn swap_remove(&mut self, gl: &mut GLContext, idx: uint, count: uint) {
     self.buffer.swap_remove(gl, idx, count);
-    self.length -= count * self.attrib_span;
+    self.length -= count;
   }
 
   /// Draws all the queued triangles to the screen.
@@ -405,7 +402,7 @@ impl<'a, T> GLArray<'a, T> {
       gl::BindVertexArray(self.handle.gl_id);
       gl::BindBuffer(gl::ARRAY_BUFFER, self.buffer.byte_buffer.handle.gl_id);
 
-      gl::DrawArrays(self.mode, (start * self.attrib_span) as i32, (len * self.attrib_span) as i32);
+      gl::DrawArrays(self.mode, start as i32, len as i32);
     }
   }
 }
