@@ -1,7 +1,8 @@
 use gl;
 use gl::types::*;
-use std::raw;
+use std::kinds::marker;
 use std::mem;
+use std::raw;
 use std::str;
 
 unsafe fn from_c_str<'a>(s: *const u8) -> &'a str {
@@ -23,18 +24,35 @@ unsafe fn from_c_str<'a>(s: *const u8) -> &'a str {
   str::from_utf8_unchecked(mem::transmute(as_slice))
 }
 
-/// A handle to an OpenGL context. Only create one of these per thread.
-#[deriving(Send)]
-pub struct GLContextExistence;
+pub struct GLContextExistence {
+  nocopy: marker::NoCopy,
+  nosend: marker::NoSend,
+  nosync: marker::NoSync,
+}
 
-pub struct GLContext;
+pub struct GLContext {
+  nocopy: marker::NoCopy,
+  nosend: marker::NoSend,
+  nosync: marker::NoSync,
+}
 
 // TODO(bfops): Safely create GLContext from existing ones, e.g. sdl2::video::GLContext.
 impl GLContext {
   pub unsafe fn new() -> (GLContextExistence, GLContext) {
     // TODO(cgaebel): Have a thread-local variable checking whether or not
     // there is only one GLContext, and fail if there's more than one.
-    (GLContextExistence, GLContext)
+    (
+      GLContextExistence {
+        nocopy: marker::NoCopy,
+        nosync: marker::NoSync,
+        nosend: marker::NoSend,
+      },
+      GLContext {
+        nocopy: marker::NoCopy,
+        nosync: marker::NoSync,
+        nosend: marker::NoSend,
+      },
+    )
   }
 
   /// Stops the processing of any triangles hidden from view when rendering.
