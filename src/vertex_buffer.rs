@@ -88,6 +88,12 @@ impl<'a> GLByteBuffer<'a> {
     }
   }
 
+  pub fn bind(&self, _: &mut GLContext) {
+    unsafe {
+      gl::BindBuffer(gl::ARRAY_BUFFER, self.handle.gl_id);
+    }
+  }
+
   /// Add more data into this buffer.
   pub unsafe fn push(&mut self, gl: &mut GLContext, vs: *const u8, count: uint) {
     assert!(
@@ -117,8 +123,6 @@ impl<'a> GLByteBuffer<'a> {
       );
 
       unsafe {
-        gl::BindBuffer(gl::ARRAY_BUFFER, self.handle.gl_id);
-
         gl::CopyBufferSubData(
           gl::ARRAY_BUFFER,
           gl::ARRAY_BUFFER,
@@ -143,8 +147,6 @@ impl<'a> GLByteBuffer<'a> {
     count: uint,
   ) {
     assert!(idx + count <= self.capacity);
-
-    gl::BindBuffer(gl::ARRAY_BUFFER, self.handle.gl_id);
 
     gl::BufferSubData(
       gl::ARRAY_BUFFER,
@@ -375,6 +377,13 @@ impl<'a, T> GLArray<'a, T> {
     }
   }
 
+  pub fn bind(&self, _: &mut GLContext) {
+    unsafe {
+      gl::BindVertexArray(self.handle.gl_id);
+      gl::BindBuffer(gl::ARRAY_BUFFER, self.buffer.byte_buffer.handle.gl_id);
+    }
+  }
+
   pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) {
     self.buffer.push(gl, vs);
     self.length += vs.len();
@@ -395,9 +404,6 @@ impl<'a, T> GLArray<'a, T> {
     assert!(start + len <= self.length);
 
     unsafe {
-      gl::BindVertexArray(self.handle.gl_id);
-      gl::BindBuffer(gl::ARRAY_BUFFER, self.buffer.byte_buffer.handle.gl_id);
-
       gl::DrawArrays(self.mode, start as i32, len as i32);
     }
   }
