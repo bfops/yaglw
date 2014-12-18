@@ -29,9 +29,9 @@ impl Default for TextureUnit {
 }
 
 impl Add<u32, TextureUnit> for TextureUnit {
-  fn add(&self, rhs: &u32) -> TextureUnit {
+  fn add(self, rhs: u32) -> TextureUnit {
     TextureUnit {
-      glsl_id: self.glsl_id + *rhs,
+      glsl_id: self.glsl_id + rhs,
     }
   }
 }
