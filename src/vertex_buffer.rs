@@ -78,7 +78,7 @@ impl<'a> GLByteBuffer<'a> {
     match gl_context.get_error() {
       gl::NO_ERROR => {},
       gl::OUT_OF_MEMORY => panic!("Out of VRAM"),
-      err => panic!("OpenGL error 0x{:x}", err),
+      err => warn!("OpenGL error 0x{:x}", err),
     }
 
     GLByteBuffer {
@@ -364,7 +364,7 @@ impl<'a, T> GLArray<'a, T> {
 
     match unsafe { gl::GetError() } {
       gl::NO_ERROR => {},
-      err => panic!("OpenGL error 0x{:x}", err),
+      err => warn!("OpenGL error 0x{:x}", err),
     }
 
     assert_eq!(attrib_span, mem::size_of::<T>());
