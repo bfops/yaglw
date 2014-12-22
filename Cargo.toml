@@ -10,5 +10,8 @@ authors = [
 name = "yaglw"
 path = "src/lib.rs"
 
+[dependencies.log]
+git = "https://github.com/rust-lang/log"
+
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"
