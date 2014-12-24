@@ -75,7 +75,10 @@ impl<'a> ShaderHandle<'a> {
       unsafe {
         gl::GetShaderInfoLog(gl_id, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
       }
-      panic!("error compiling 0x{:x} shader: {}", typ, str::from_utf8(buf.as_slice()).expect("ShaderInfoLog not valid utf8"));
+      let error_string =
+        str::from_utf8(buf.as_slice())
+          .unwrap_or_else(|_| panic!("ShaderInfoLog not valid utf8"));
+      panic!("error compiling 0x{:x} shader: {}", typ, error_string);
     }
 
     ShaderHandle {
@@ -137,7 +140,10 @@ impl<'a> Shader<'a> {
       unsafe {
         gl::GetProgramInfoLog(handle.gl_id, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
       }
-      panic!("{}", str::from_utf8(buf.as_slice()).expect("ProgramInfoLog not valid utf8"));
+      let error_string =
+        str::from_utf8(buf.as_slice())
+          .unwrap_or_else(|_| panic!("ProgramInfoLog not valid utf8"));
+      panic!("{}", error_string);
     }
 
     Shader {
