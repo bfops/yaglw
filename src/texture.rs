@@ -3,11 +3,12 @@ use gl::types::*;
 use gl_context::{GLContext, GLContextExistence};
 use std::default::Default;
 use std::kinds::marker::ContravariantLifetime;
+use std::ops::Add;
 use vertex_buffer::GLBuffer;
 
 // TODO(cgaebel): Handle texture creation from an SDL surface.
 
-#[deriving(Copy, Clone)]
+#[derive(Copy, Clone)]
 pub struct TextureUnit {
   pub glsl_id: GLuint,
 }

@@ -3,6 +3,7 @@ use gl::types::*;
 use gl_context::{GLContext, GLContextExistence};
 use shader::*;
 use std::cell::RefCell;
+use std::c_str::ToCStr;
 use std::kinds::marker::ContravariantLifetime;
 use std::mem;
 use std::ptr;
@@ -203,8 +204,8 @@ impl<'a, T> GLBuffer<'a, T> {
   }
 }
 
-#[deriving(Show)]
-#[deriving(Copy, Clone)]
+#[derive(Show)]
+#[derive(Copy, Clone)]
 pub enum DrawMode {
   Lines,
   Triangles,
@@ -221,8 +222,8 @@ impl DrawMode {
   }
 }
 
-#[deriving(Show)]
-#[deriving(Copy, Clone)]
+#[derive(Show)]
+#[derive(Copy, Clone)]
 pub enum GLType {
   Float,
   UInt,
@@ -255,7 +256,7 @@ impl GLType {
   }
 }
 
-#[deriving(Show)]
+#[derive(Show)]
 /// Specifies how to pass data from OpenGL to the vertex shaders.
 pub struct VertexAttribData<'a> {
   /// Cooresponds to the shader's `input variable`.
