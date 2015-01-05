@@ -1,7 +1,5 @@
-//! An ownership-semantics based handle to OpenGL. This prevents us from
-//! accidentally modifying OpenGL state from multiple threads.
-//!
-//! GLW stands for "OpenGL wrapper".
+#![feature(associated_types)]
+#![feature(default_type_params)]
 #![feature(globs)]
 #![feature(phase)]
 #![feature(unsafe_destructor)]

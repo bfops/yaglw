@@ -107,7 +107,7 @@ pub struct Shader<'a> {
 }
 
 impl<'a> Shader<'a> {
-  pub fn new<T: Iterator<(String, GLenum)>>(
+  pub fn new<T: Iterator<Item=(String, GLenum)>>(
     gl: &'a GLContextExistence,
     mut shader_components: T,
   ) -> Shader<'a> {
@@ -167,8 +167,7 @@ impl<'a> Shader<'a> {
     name: &'static str,
   ) -> GLint {
     let s_name = String::from_str(name);
-    // TODO: This shouldn't require a clone.
-    match self.uniforms.entry(s_name.clone()) {
+    match self.uniforms.entry(&s_name) {
       Entry::Occupied(entry) => *entry.get(),
       Entry::Vacant(entry) => {
         let c_name = name.to_c_str();
@@ -178,7 +177,7 @@ impl<'a> Shader<'a> {
         };
         assert!(loc != -1, "couldn't find shader uniform: {}", s_name);
 
-        *entry.set(loc)
+        *entry.insert(loc)
       },
     }
   }
