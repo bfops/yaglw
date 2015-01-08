@@ -3,7 +3,6 @@ use gl::types::*;
 use gl_context::{GLContext, GLContextExistence};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use std::c_str::ToCStr;
 use std::iter::repeat;
 use std::kinds::marker::ContravariantLifetime;
 use std::ptr;
@@ -56,8 +55,9 @@ impl<'a> ShaderHandle<'a> {
     assert!(gl_id != 0);
 
     // Attempt to compile the shader
-    shader_source.with_c_str(|ptr| unsafe { gl::ShaderSource(gl_id, 1, &ptr, ptr::null()) });
+    let c_str = shader_source.as_bytes().as_ptr() as *const i8;
     unsafe {
+      gl::ShaderSource(gl_id, 1, &c_str, ptr::null());
       gl::CompileShader(gl_id);
     }
 
@@ -170,10 +170,9 @@ impl<'a> Shader<'a> {
     match self.uniforms.entry(&s_name) {
       Entry::Occupied(entry) => *entry.get(),
       Entry::Vacant(entry) => {
-        let c_name = name.to_c_str();
-        let p_name = c_name.as_ptr();
+        let c_name = name.as_bytes().as_ptr() as *const i8;
         let loc = unsafe {
-          gl::GetUniformLocation(self.handle.gl_id, p_name)
+          gl::GetUniformLocation(self.handle.gl_id, c_name)
         };
         assert!(loc != -1, "couldn't find shader uniform: {}", s_name);
 

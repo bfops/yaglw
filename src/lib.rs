@@ -1,12 +1,8 @@
-#![feature(associated_types)]
-#![feature(default_type_params)]
-#![feature(globs)]
-#![feature(phase)]
 #![feature(unsafe_destructor)]
 
 extern crate gl;
 extern crate libc;
-#[phase(plugin, link)]
+#[macro_use]
 extern crate log;
 
 pub mod gl_context;
