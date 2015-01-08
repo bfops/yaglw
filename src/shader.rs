@@ -3,6 +3,7 @@ use gl::types::*;
 use gl_context::{GLContext, GLContextExistence};
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::ffi::CString;
 use std::iter::repeat;
 use std::kinds::marker::ContravariantLifetime;
 use std::ptr;
@@ -55,10 +56,13 @@ impl<'a> ShaderHandle<'a> {
     assert!(gl_id != 0);
 
     // Attempt to compile the shader
-    let c_str = shader_source.as_bytes().as_ptr() as *const i8;
-    unsafe {
-      gl::ShaderSource(gl_id, 1, &c_str, ptr::null());
-      gl::CompileShader(gl_id);
+    {
+      let c_str = CString::from_slice(shader_source.as_bytes());
+      let ptr = c_str.as_ptr() as *const i8;
+      unsafe {
+        gl::ShaderSource(gl_id, 1, &ptr, ptr::null());
+        gl::CompileShader(gl_id);
+      }
     }
 
     // Get the compile status
@@ -170,9 +174,10 @@ impl<'a> Shader<'a> {
     match self.uniforms.entry(&s_name) {
       Entry::Occupied(entry) => *entry.get(),
       Entry::Vacant(entry) => {
-        let c_name = name.as_bytes().as_ptr() as *const i8;
+        let c_name = CString::from_slice(name.as_bytes());
+        let ptr = c_name.as_ptr() as *const i8;
         let loc = unsafe {
-          gl::GetUniformLocation(self.handle.gl_id, c_name)
+          gl::GetUniformLocation(self.handle.gl_id, ptr)
         };
         assert!(loc != -1, "couldn't find shader uniform: {}", s_name);
 

@@ -3,6 +3,7 @@ use gl::types::*;
 use gl_context::{GLContext, GLContextExistence};
 use shader::*;
 use std::cell::RefCell;
+use std::ffi::CString;
 use std::kinds::marker::ContravariantLifetime;
 use std::mem;
 use std::ptr;
@@ -11,9 +12,10 @@ use std::rc::Rc;
 /// Gets the id number for a given input of the shader program.
 #[allow(non_snake_case)]
 pub fn glGetAttribLocation(shader_program: GLuint, name: &str) -> GLint {
-  let c_str = name.as_bytes().as_ptr() as *const i8;
+  let c_str = CString::from_slice(name.as_bytes());
+  let ptr = c_str.as_ptr() as *const i8;
   unsafe {
-    gl::GetAttribLocation(shader_program, c_str)
+    gl::GetAttribLocation(shader_program, ptr)
   }
 }
 
