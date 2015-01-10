@@ -77,7 +77,7 @@ impl<'a> ShaderHandle<'a> {
       unsafe {
         gl::GetShaderiv(gl_id, gl::INFO_LOG_LENGTH, &mut len);
       }
-      let mut buf: Vec<u8> = repeat(0).take(len as uint - 1).collect(); // subtract 1 to skip the trailing null character
+      let mut buf: Vec<u8> = repeat(0).take(len as usize - 1).collect(); // subtract 1 to skip the trailing null character
       unsafe {
         gl::GetShaderInfoLog(gl_id, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
       }
@@ -142,7 +142,7 @@ impl<'a> Shader<'a> {
       unsafe {
         gl::GetProgramiv(handle.gl_id, gl::INFO_LOG_LENGTH, &mut len);
       }
-      let mut buf: Vec<u8> = repeat(0).take(len as uint - 1).collect(); // subtract 1 to skip the trailing null character
+      let mut buf: Vec<u8> = repeat(0).take(len as usize - 1).collect(); // subtract 1 to skip the trailing null character
       unsafe {
         gl::GetProgramInfoLog(handle.gl_id, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
       }

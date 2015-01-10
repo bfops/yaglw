@@ -6,6 +6,7 @@ use std::cell::RefCell;
 use std::ffi::CString;
 use std::marker::ContravariantLifetime;
 use std::mem;
+use std::num;
 use std::ptr;
 use std::rc::Rc;
 
@@ -54,9 +55,9 @@ impl<'a> Drop for BufferHandle<'a> {
 pub struct GLByteBuffer<'a> {
   pub handle: BufferHandle<'a>,
   /// number of bytes in the buffer.
-  pub length: uint,
+  pub length: usize,
   /// maximum number of bytes in the buffer.
-  pub capacity: uint,
+  pub capacity: usize,
 }
 
 impl<'a> GLByteBuffer<'a> {
@@ -65,7 +66,7 @@ impl<'a> GLByteBuffer<'a> {
   pub fn new(
     gl: &'a GLContextExistence,
     gl_context: &mut GLContext,
-    capacity: uint,
+    capacity: usize,
   ) -> GLByteBuffer<'a> {
     let handle = BufferHandle::new(gl);
 
@@ -100,7 +101,7 @@ impl<'a> GLByteBuffer<'a> {
   }
 
   /// Add more data into this buffer.
-  pub unsafe fn push(&mut self, gl: &mut GLContext, vs: *const u8, count: uint) {
+  pub unsafe fn push(&mut self, gl: &mut GLContext, vs: *const u8, count: usize) {
     assert!(
       self.length + count <= self.capacity,
       "GLByteBuffer::push {} into a {}/{} full GLByteBuffer",
@@ -113,7 +114,7 @@ impl<'a> GLByteBuffer<'a> {
     self.length += count;
   }
 
-  pub fn swap_remove(&mut self, _gl: &mut GLContext, i: uint, count: uint) {
+  pub fn swap_remove(&mut self, _gl: &mut GLContext, i: usize, count: usize) {
     assert!(count <= self.length);
     self.length -= count;
     assert!(i <= self.length);
@@ -139,7 +140,7 @@ impl<'a> GLByteBuffer<'a> {
     }
   }
 
-  pub unsafe fn update(&self, gl: &mut GLContext, idx: uint, vs: *const u8, count: uint) {
+  pub unsafe fn update(&self, gl: &mut GLContext, idx: usize, vs: *const u8, count: usize) {
     assert!(idx + count <= self.length);
     self.update_inner(gl, idx, vs, count);
   }
@@ -147,9 +148,9 @@ impl<'a> GLByteBuffer<'a> {
   unsafe fn update_inner(
     &self,
     _gl: &mut GLContext,
-    idx: uint,
+    idx: usize,
     vs: *const u8,
-    count: uint,
+    count: usize,
   ) {
     assert!(idx + count <= self.capacity);
 
@@ -171,7 +172,7 @@ impl<'a, T> GLBuffer<'a, T> {
   pub fn new(
     gl: &'a GLContextExistence,
     gl_context: &mut GLContext,
-    capacity: uint,
+    capacity: usize,
   ) -> GLBuffer<'a, T> {
     GLBuffer {
       byte_buffer: GLByteBuffer::new(gl, gl_context, capacity * mem::size_of::<T>()),
@@ -188,7 +189,7 @@ impl<'a, T> GLBuffer<'a, T> {
     }
   }
 
-  pub fn update(&mut self, gl: &mut GLContext, idx: uint, vs: &[T]) {
+  pub fn update(&mut self, gl: &mut GLContext, idx: usize, vs: &[T]) {
     unsafe {
       self.byte_buffer.update(
         gl,
@@ -199,7 +200,7 @@ impl<'a, T> GLBuffer<'a, T> {
     }
   }
 
-  pub fn swap_remove(&mut self, gl: &mut GLContext, idx: uint, count: uint) {
+  pub fn swap_remove(&mut self, gl: &mut GLContext, idx: usize, count: usize) {
     self.byte_buffer.swap_remove(
       gl,
       mem::size_of::<T>() * idx,
@@ -235,12 +236,14 @@ pub enum GLType {
 }
 
 impl GLType {
-  pub fn size(&self) -> uint {
-    match *self {
-      GLType::Float => mem::size_of::<GLfloat>(),
-      GLType::UInt  => mem::size_of::<GLuint>(),
-      GLType::Int   => mem::size_of::<GLint>(),
-    }
+  pub fn size(&self) -> u32 {
+    num::cast(
+      match *self {
+        GLType::Float => mem::size_of::<GLfloat>(),
+        GLType::UInt  => mem::size_of::<GLuint>(),
+        GLType::Int   => mem::size_of::<GLint>(),
+      })
+    .unwrap()
   }
 
   pub fn gl_enum(&self) -> GLenum {
@@ -266,7 +269,7 @@ pub struct VertexAttribData<'a> {
   /// Cooresponds to the shader's `input variable`.
   pub name: &'a str,
   /// The size of this attribute, in the provided units.
-  pub size: uint,
+  pub size: u32,
   pub unit: GLType,
 }
 
@@ -305,7 +308,7 @@ pub struct GLArray<'a, T> {
   /// How to draw this buffer. Ex: gl::LINES, gl::TRIANGLES, etc.
   pub mode: GLenum,
   /// length in `T`s.
-  pub length: uint,
+  pub length: usize,
 }
 
 impl<'a, T> GLArray<'a, T> {
@@ -364,7 +367,7 @@ impl<'a, T> GLArray<'a, T> {
           );
         }
       }
-      offset += (attrib.size * attrib.unit.size()) as int;
+      offset += (attrib.size * attrib.unit.size()) as isize;
     }
 
     match unsafe { gl::GetError() } {
@@ -372,7 +375,7 @@ impl<'a, T> GLArray<'a, T> {
       err => warn!("OpenGL error 0x{:x}", err),
     }
 
-    assert_eq!(attrib_span, mem::size_of::<T>());
+    assert_eq!(attrib_span as usize, mem::size_of::<T>());
 
     GLArray {
       buffer: buffer,
@@ -394,7 +397,7 @@ impl<'a, T> GLArray<'a, T> {
     self.length += vs.len();
   }
 
-  pub fn swap_remove(&mut self, gl: &mut GLContext, idx: uint, count: uint) {
+  pub fn swap_remove(&mut self, gl: &mut GLContext, idx: usize, count: usize) {
     self.buffer.swap_remove(gl, idx, count);
     self.length -= count;
   }
@@ -405,7 +408,7 @@ impl<'a, T> GLArray<'a, T> {
   }
 
   /// Draw some subset of the triangle array.
-  pub fn draw_slice(&self, _gl: &mut GLContext, start: uint, len: uint) {
+  pub fn draw_slice(&self, _gl: &mut GLContext, start: usize, len: usize) {
     assert!(start + len <= self.length);
 
     unsafe {

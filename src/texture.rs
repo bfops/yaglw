@@ -90,7 +90,7 @@ impl<'a, T> BufferTexture<'a, T> {
     gl: &'a GLContextExistence,
     gl_context: &mut GLContext,
     format: GLenum,
-    capacity: uint,
+    capacity: usize,
   ) -> BufferTexture<'a, T> {
     // TODO: enforce that `format` matches T.
 
