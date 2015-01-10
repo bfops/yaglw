@@ -4,7 +4,7 @@ use gl_context::{GLContext, GLContextExistence};
 use shader::*;
 use std::cell::RefCell;
 use std::ffi::CString;
-use std::kinds::marker::ContravariantLifetime;
+use std::marker::ContravariantLifetime;
 use std::mem;
 use std::ptr;
 use std::rc::Rc;

@@ -1,6 +1,6 @@
 use gl;
 use gl::types::*;
-use std::kinds::marker;
+use std::marker;
 use std::mem;
 use std::raw;
 use std::str;

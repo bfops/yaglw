@@ -2,7 +2,7 @@ use gl;
 use gl::types::*;
 use gl_context::{GLContext, GLContextExistence};
 use std::default::Default;
-use std::kinds::marker::ContravariantLifetime;
+use std::marker::ContravariantLifetime;
 use std::ops::Add;
 use vertex_buffer::GLBuffer;
 

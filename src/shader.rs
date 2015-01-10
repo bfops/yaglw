@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::ffi::CString;
 use std::iter::repeat;
-use std::kinds::marker::ContravariantLifetime;
+use std::marker::ContravariantLifetime;
 use std::ptr;
 use std::str;
 
@@ -171,7 +171,7 @@ impl<'a> Shader<'a> {
     name: &'static str,
   ) -> GLint {
     let s_name = String::from_str(name);
-    match self.uniforms.entry(&s_name) {
+    match self.uniforms.entry(s_name.clone()) {
       Entry::Occupied(entry) => *entry.get(),
       Entry::Vacant(entry) => {
         let c_name = CString::from_slice(name.as_bytes());
