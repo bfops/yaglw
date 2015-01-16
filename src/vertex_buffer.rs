@@ -377,11 +377,13 @@ impl<'a, T> GLArray<'a, T> {
 
     assert_eq!(attrib_span as usize, mem::size_of::<T>());
 
+    let length = buffer.byte_buffer.length / mem::size_of::<T>();
+
     GLArray {
       buffer: buffer,
       handle: handle,
       mode: mode.to_enum(),
-      length: 0,
+      length: length,
     }
   }
 
