@@ -20,5 +20,5 @@ git = "https://github.com/bjz/gl-rs"
 name = "triangle"
 path = "examples/triangle.rs"
 
-[dependencies.sdl2]
+[dev-dependencies.sdl2]
 git = "https://github.com/AngryLawyer/rust-sdl2"
