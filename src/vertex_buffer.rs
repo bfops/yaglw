@@ -2,13 +2,11 @@ use gl;
 use gl::types::*;
 use gl_context::{GLContext, GLContextExistence};
 use shader::*;
-use std::cell::RefCell;
 use std::ffi::CString;
 use std::marker::ContravariantLifetime;
 use std::mem;
 use std::num;
 use std::ptr;
-use std::rc::Rc;
 
 /// Gets the id number for a given input of the shader program.
 #[allow(non_snake_case)]
@@ -317,7 +315,7 @@ impl<'a, T> GLArray<'a, T> {
   pub fn new(
     gl: &'a GLContextExistence,
     _gl_context: &mut GLContext,
-    shader_program: Rc<RefCell<Shader>>,
+    shader_program: &Shader<'a>,
     attribs: &[VertexAttribData],
     mode: DrawMode,
     buffer: GLBuffer<'a, T>,
@@ -339,7 +337,7 @@ impl<'a, T> GLArray<'a, T> {
     for attrib in attribs.iter() {
       let shader_attrib =
         glGetAttribLocation(
-          shader_program.borrow().handle.gl_id,
+          shader_program.handle.gl_id,
           attrib.name
         );
       assert!(shader_attrib != -1, "shader attribute \"{}\" not found", attrib.name);
