@@ -26,14 +26,10 @@ unsafe fn from_c_str<'a>(s: *const u8) -> &'a str {
 
 pub struct GLContextExistence {
   nocopy: marker::NoCopy,
-  nosend: marker::NoSend,
-  nosync: marker::NoSync,
 }
 
 pub struct GLContext {
   nocopy: marker::NoCopy,
-  nosend: marker::NoSend,
-  nosync: marker::NoSync,
 }
 
 // TODO(bfops): Safely create GLContext from existing ones, e.g. sdl2::video::GLContext.
@@ -44,13 +40,9 @@ impl GLContext {
     (
       GLContextExistence {
         nocopy: marker::NoCopy,
-        nosync: marker::NoSync,
-        nosend: marker::NoSend,
       },
       GLContext {
         nocopy: marker::NoCopy,
-        nosync: marker::NoSync,
-        nosend: marker::NoSend,
       },
     )
   }
