@@ -89,11 +89,11 @@ pub fn main() {
   ];
 
   let components = [
-    ((VERTEX_SHADER, gl::VERTEX_SHADER)),
-    ((FRAGMENT_SHADER, gl::FRAGMENT_SHADER)),
+    ((gl::VERTEX_SHADER, VERTEX_SHADER)),
+    ((gl::FRAGMENT_SHADER, FRAGMENT_SHADER)),
   ];
 
-  let shader = Shader::new(&gl, components.iter().map(|&(s, ty)| (String::from_str(s), ty)));
+  let shader = Shader::new(&gl, components.iter().map(|&(ty, s)| (ty, String::from_str(s))));
   shader.use_shader(&mut gl_context);
 
   let vao =

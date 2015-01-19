@@ -111,14 +111,14 @@ pub struct Shader<'a> {
 }
 
 impl<'a> Shader<'a> {
-  pub fn new<T: Iterator<Item=(String, GLenum)>>(
+  pub fn new<T: Iterator<Item=(GLenum, String)>>(
     gl: &'a GLContextExistence,
     mut shader_components: T,
   ) -> Shader<'a> {
     let handle = ProgramHandle::new(gl);
 
     let mut components = Vec::new();
-    for (content, component) in shader_components {
+    for (component, content) in shader_components {
       let s = ShaderHandle::compile_from(gl, content, component);
       unsafe {
         gl::AttachShader(handle.gl_id, s.gl_id);
