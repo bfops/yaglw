@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/bfops/yaglw.svg?branch=master)](https://travis-ci.org/bfops/yaglw)
+
 **What is this?**
 
 `yaglw` (Yet Another openGL Wrapper) is a safe, low-level, low-overhead OpenGL wrapper in Rust. It's still very young and very incomplete, and code is still being moved over from [playform](https://github.com/bfops/playform/).
