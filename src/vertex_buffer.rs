@@ -99,17 +99,17 @@ impl<'a> GLByteBuffer<'a> {
   }
 
   /// Add more data into this buffer.
-  pub unsafe fn push(&mut self, gl: &mut GLContext, vs: *const u8, count: usize) {
-    assert!(
-      self.length + count <= self.capacity,
-      "GLByteBuffer::push {} into a {}/{} full GLByteBuffer",
-      count,
-      self.length,
-      self.capacity
-    );
+  /// Returns false and does nothing if this would exceed the capacity of the buffer.
+  pub unsafe fn push(&mut self, gl: &mut GLContext, vs: *const u8, count: usize) -> bool {
+    if self.length + count > self.capacity {
+      // This would overflow the buffer.
+      return false;
+    }
 
     self.update_inner(gl, self.length, vs, count);
     self.length += count;
+
+    true
   }
 
   pub fn swap_remove(&mut self, _gl: &mut GLContext, i: usize, count: usize) {
@@ -177,13 +177,13 @@ impl<'a, T> GLBuffer<'a, T> {
     }
   }
 
-  pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) {
+  pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) -> bool {
     unsafe {
       self.byte_buffer.push(
         gl,
         mem::transmute(vs.as_ptr()),
         mem::size_of::<T>() * vs.len()
-      );
+      )
     }
   }
 
@@ -392,9 +392,10 @@ impl<'a, T> GLArray<'a, T> {
     }
   }
 
-  pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) {
-    self.buffer.push(gl, vs);
+  pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) -> bool {
     self.length += vs.len();
+    let r = self.buffer.push(gl, vs);
+    r
   }
 
   pub fn swap_remove(&mut self, gl: &mut GLContext, idx: usize, count: usize) {
