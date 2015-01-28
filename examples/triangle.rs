@@ -6,7 +6,7 @@ use gl::types::*;
 use sdl2::event::Event;
 use std::mem;
 use std::time::duration::Duration;
-use std::io::timer;
+use std::old_io::timer;
 
 use yaglw::gl_context::GLContext;
 use yaglw::shader::Shader;
