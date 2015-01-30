@@ -151,10 +151,10 @@ fn quit_event() -> bool {
       Event::None => {
         return false;
       },
-      Event::Quit(_) => {
+      Event::Quit{..} => {
         return true;
       }
-      Event::AppTerminating(_) => {
+      Event::AppTerminating{..} => {
         return true;
       }
       _ => {},
