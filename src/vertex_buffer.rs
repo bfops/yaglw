@@ -100,6 +100,8 @@ impl<'a> GLByteBuffer<'a> {
 
   /// Add more data into this buffer.
   /// Returns false and does nothing if this would exceed the capacity of the buffer.
+  /// N.B. For performance reasons, this does NOT bind the buffer.
+  /// It will do the wrong thing if `bind` has not been correctly called.
   pub unsafe fn push(&mut self, gl: &mut GLContext, vs: *const u8, count: usize) -> bool {
     if self.length + count > self.capacity {
       // This would overflow the buffer.
@@ -112,6 +114,8 @@ impl<'a> GLByteBuffer<'a> {
     true
   }
 
+  /// N.B. For performance reasons, this does NOT bind the buffer.
+  /// It will do the wrong thing if `bind` has not been correctly called.
   pub fn swap_remove(&mut self, _gl: &mut GLContext, i: usize, count: usize) {
     assert!(count <= self.length);
     self.length -= count;
@@ -138,6 +142,8 @@ impl<'a> GLByteBuffer<'a> {
     }
   }
 
+  /// N.B. For performance reasons, this does NOT bind the buffer.
+  /// It will do the wrong thing if `bind` has not been correctly called.
   pub unsafe fn update(&self, gl: &mut GLContext, idx: usize, vs: *const u8, count: usize) {
     assert!(idx + count <= self.length);
     self.update_inner(gl, idx, vs, count);
@@ -177,6 +183,8 @@ impl<'a, T> GLBuffer<'a, T> {
     }
   }
 
+  /// N.B. For performance reasons, this does NOT bind the buffer.
+  /// It will do the wrong thing if `bind` has not been correctly called.
   pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) -> bool {
     unsafe {
       self.byte_buffer.push(
@@ -187,6 +195,8 @@ impl<'a, T> GLBuffer<'a, T> {
     }
   }
 
+  /// N.B. For performance reasons, this does NOT bind the buffer.
+  /// It will do the wrong thing if `bind` has not been correctly called.
   pub fn update(&mut self, gl: &mut GLContext, idx: usize, vs: &[T]) {
     unsafe {
       self.byte_buffer.update(
@@ -198,6 +208,8 @@ impl<'a, T> GLBuffer<'a, T> {
     }
   }
 
+  /// N.B. For performance reasons, this does NOT bind the buffer.
+  /// It will do the wrong thing if `bind` has not been correctly called.
   pub fn swap_remove(&mut self, gl: &mut GLContext, idx: usize, count: usize) {
     self.byte_buffer.swap_remove(
       gl,
@@ -392,23 +404,33 @@ impl<'a, T> GLArray<'a, T> {
     }
   }
 
+  /// N.B. For performance reasons, this does NOT bind the buffer.
+  /// It will do the wrong thing if `bind` has not been correctly called.
+  /// The array doesn't need to be bound.
   pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) -> bool {
     self.length += vs.len();
     let r = self.buffer.push(gl, vs);
     r
   }
 
+  /// N.B. For performance reasons, this does NOT bind the buffer.
+  /// It will do the wrong thing if `bind` has not been correctly called.
+  /// The array doesn't need to be bound.
   pub fn swap_remove(&mut self, gl: &mut GLContext, idx: usize, count: usize) {
     self.buffer.swap_remove(gl, idx, count);
     self.length -= count;
   }
 
   /// Draws all the queued triangles to the screen.
+  /// N.B. For performance reasons, this does NOT bind the array.
+  /// It will do the wrong thing if `bind` has not been correctly called.
   pub fn draw(&self, gl: &mut GLContext) {
     self.draw_slice(gl, 0, self.length);
   }
 
   /// Draw some subset of the triangle array.
+  /// N.B. For performance reasons, this does NOT bind the array.
+  /// It will do the wrong thing if `bind` has not been correctly called.
   pub fn draw_slice(&self, _gl: &mut GLContext, start: usize, len: usize) {
     assert!(start + len <= self.length);
 
