@@ -1,3 +1,7 @@
+#![feature(collections)]
+#![feature(core)]
+#![feature(libc)]
+#![feature(std_misc)]
 #![feature(unsafe_destructor)]
 
 extern crate gl;

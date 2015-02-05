@@ -113,7 +113,7 @@ pub struct Shader<'a> {
 impl<'a> Shader<'a> {
   pub fn new<T: Iterator<Item=(GLenum, String)>>(
     gl: &'a GLContextExistence,
-    mut shader_components: T,
+    shader_components: T,
   ) -> Shader<'a> {
     let handle = ProgramHandle::new(gl);
 

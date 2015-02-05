@@ -219,7 +219,7 @@ impl<'a, T> GLBuffer<'a, T> {
   }
 }
 
-#[derive(Show)]
+#[derive(Debug)]
 #[derive(Copy, Clone)]
 pub enum DrawMode {
   Lines,
@@ -237,7 +237,7 @@ impl DrawMode {
   }
 }
 
-#[derive(Show)]
+#[derive(Debug)]
 #[derive(Copy, Clone)]
 pub enum GLType {
   Float,
@@ -273,7 +273,7 @@ impl GLType {
   }
 }
 
-#[derive(Show)]
+#[derive(Debug)]
 /// Specifies how to pass data from OpenGL to the vertex shaders.
 pub struct VertexAttribData<'a> {
   /// Cooresponds to the shader's `input variable`.
