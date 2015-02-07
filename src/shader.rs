@@ -1,21 +1,19 @@
 use gl;
 use gl::types::*;
-use gl_context::{GLContext, GLContextExistence};
+use gl_context::GLContext;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
 use std::ffi::CString;
 use std::iter::repeat;
-use std::marker::ContravariantLifetime;
 use std::ptr;
 use std::str;
 
 pub struct ProgramHandle<'a> {
   pub gl_id: GLuint,
-  pub lifetime: ContravariantLifetime<'a>,
 }
 
 impl<'a> ProgramHandle<'a> {
-  pub fn new(_gl: &'a GLContextExistence) -> ProgramHandle<'a> {
+  pub fn new<'b:'a>(_gl: &'a GLContext) -> ProgramHandle<'b> {
     let gl_id = unsafe {
       gl::CreateProgram()
     };
@@ -24,7 +22,6 @@ impl<'a> ProgramHandle<'a> {
 
     ProgramHandle {
       gl_id: gl_id,
-      lifetime: ContravariantLifetime,
     }
   }
 }
@@ -40,12 +37,11 @@ impl<'a> Drop for ProgramHandle<'a> {
 
 pub struct ShaderHandle<'a> {
   pub gl_id: GLuint,
-  pub lifetime: ContravariantLifetime<'a>,
 }
 
 impl<'a> ShaderHandle<'a> {
   pub fn compile_from(
-    _gl: &'a GLContextExistence,
+    _gl: &'a GLContext,
     shader_source: String,
     typ: GLenum
   ) -> ShaderHandle<'a> {
@@ -89,7 +85,6 @@ impl<'a> ShaderHandle<'a> {
 
     ShaderHandle {
       gl_id: gl_id,
-      lifetime: ContravariantLifetime,
     }
   }
 }
@@ -107,14 +102,13 @@ pub struct Shader<'a> {
   pub handle: ProgramHandle<'a>,
   pub components: Vec<ShaderHandle<'a>>,
   pub uniforms: HashMap<String, GLint>,
-  pub lifetime: ContravariantLifetime<'a>,
 }
 
 impl<'a> Shader<'a> {
-  pub fn new<T: Iterator<Item=(GLenum, String)>>(
-    gl: &'a GLContextExistence,
+  pub fn new<'b:'a, T: Iterator<Item=(GLenum, String)>>(
+    gl: &'a GLContext,
     shader_components: T,
-  ) -> Shader<'a> {
+  ) -> Shader<'b> {
     let handle = ProgramHandle::new(gl);
 
     let mut components = Vec::new();
@@ -156,7 +150,6 @@ impl<'a> Shader<'a> {
       handle: handle,
       components: components,
       uniforms: HashMap::new(),
-      lifetime: ContravariantLifetime,
     }
   }
 

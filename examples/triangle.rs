@@ -53,7 +53,7 @@ pub fn main() {
     mem::transmute(sdl2::video::gl_get_proc_address(s))
   });
 
-  let (gl, mut gl_context) = unsafe {
+  let mut gl = unsafe {
     GLContext::new()
   };
 
@@ -72,8 +72,8 @@ pub fn main() {
     },
   ];
 
-  let mut vbo = GLBuffer::new(&gl, &mut gl_context, 3);
-  vbo.push(&mut gl_context, &vertices);
+  let mut vbo = GLBuffer::new(&mut gl, 3);
+  vbo.push(&mut gl, &vertices);
 
   let attribs = [
     VertexAttribData {
@@ -94,20 +94,19 @@ pub fn main() {
   ];
 
   let shader = Shader::new(&gl, components.iter().map(|&(ty, s)| (ty, String::from_str(s))));
-  shader.use_shader(&mut gl_context);
+  shader.use_shader(&mut gl);
 
   let vao =
     GLArray::new(
-      &gl,
-      &mut gl_context,
+      &mut gl,
       &shader,
       &attribs,
       DrawMode::Triangles,
       vbo,
     );
-  vao.bind(&mut gl_context);
+  vao.bind(&mut gl);
 
-  match gl_context.get_error() {
+  match gl.get_error() {
     gl::NO_ERROR => {},
     err => {
       println!("OpenGL error 0x{:x} in setup", err);
@@ -116,8 +115,8 @@ pub fn main() {
   }
 
   while !quit_event() {
-    gl_context.clear_buffer();
-    vao.draw(&mut gl_context);
+    gl.clear_buffer();
+    vao.draw(&mut gl);
     // swap buffers
     window.gl_swap_window();
 

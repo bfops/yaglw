@@ -1,8 +1,7 @@
 use gl;
 use gl::types::*;
-use gl_context::{GLContext, GLContextExistence};
+use gl_context::GLContext;
 use std::default::Default;
-use std::marker::ContravariantLifetime;
 use std::ops::Add;
 use vertex_buffer::GLBuffer;
 
@@ -41,18 +40,16 @@ impl Add<u32> for TextureUnit {
 /// A GPU-allocated texture.
 pub struct TextureHandle<'a> {
   pub gl_id: GLuint,
-  pub lifetime: ContravariantLifetime<'a>,
 }
 
 impl<'a> TextureHandle<'a> {
-  pub fn new(_gl: &'a GLContextExistence) -> TextureHandle<'a> {
+  pub fn new<'b:'a>(_gl: &'a GLContext) -> TextureHandle<'b> {
     let mut handle = 0;
     unsafe {
       gl::GenTextures(1, &mut handle);
     }
     TextureHandle {
       gl_id: handle,
-      lifetime: ContravariantLifetime,
     }
   }
 }
@@ -72,7 +69,7 @@ pub struct Texture2D<'a> {
 }
 
 impl<'a> Texture2D<'a> {
-  pub fn new(gl: &'a GLContextExistence) -> Texture2D<'a> {
+  pub fn new(gl: &'a GLContext) -> Texture2D<'a> {
     Texture2D {
       handle: TextureHandle::new(gl),
     }
@@ -86,15 +83,14 @@ pub struct BufferTexture<'a, T> {
 }
 
 impl<'a, T> BufferTexture<'a, T> {
-  pub fn new(
-    gl: &'a GLContextExistence,
-    gl_context: &mut GLContext,
+  pub fn new<'b:'a>(
+    gl: &'a mut GLContext,
     format: GLenum,
     capacity: usize,
-  ) -> BufferTexture<'a, T> {
+  ) -> BufferTexture<'b, T> {
     // TODO: enforce that `format` matches T.
 
-    let buffer = GLBuffer::new(gl, gl_context, capacity);
+    let buffer = GLBuffer::new(gl, capacity);
     let handle = TextureHandle::new(gl);
 
     unsafe {
