@@ -130,9 +130,9 @@ impl<'a> GLByteBuffer<'a> {
         gl::CopyBufferSubData(
           gl::ARRAY_BUFFER,
           gl::ARRAY_BUFFER,
-          self.length as i64,
-          i as i64,
-          count as i64,
+          self.length as GLintptr,
+          i as GLintptr,
+          count as GLsizeiptr,
         );
       }
     }
@@ -156,9 +156,9 @@ impl<'a> GLByteBuffer<'a> {
 
     gl::BufferSubData(
       gl::ARRAY_BUFFER,
-      idx as i64,
-      count as i64,
-      mem::transmute(vs)
+      idx as GLintptr,
+      count as GLsizeiptr,
+      mem::transmute(vs),
     );
   }
 }
