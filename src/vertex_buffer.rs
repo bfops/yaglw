@@ -3,6 +3,7 @@ use gl::types::*;
 use gl_context::GLContext;
 use shader::*;
 use std::ffi::CString;
+use std::marker::PhantomData;
 use std::mem;
 use std::num;
 use std::ptr;
@@ -10,7 +11,7 @@ use std::ptr;
 /// Gets the id number for a given input of the shader program.
 #[allow(non_snake_case)]
 pub fn glGetAttribLocation(shader_program: GLuint, name: &str) -> GLint {
-  let c_str = CString::from_slice(name.as_bytes());
+  let c_str = CString::new(name.as_bytes()).unwrap();
   let ptr = c_str.as_ptr() as *const i8;
   unsafe {
     gl::GetAttribLocation(shader_program, ptr)
@@ -19,6 +20,7 @@ pub fn glGetAttribLocation(shader_program: GLuint, name: &str) -> GLint {
 
 pub struct BufferHandle<'a> {
   pub gl_id: GLuint,
+  phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> BufferHandle<'a> {
@@ -33,6 +35,7 @@ impl<'a> BufferHandle<'a> {
 
     BufferHandle {
       gl_id: gl_id,
+      phantom: PhantomData,
     }
   }
 }
@@ -166,6 +169,7 @@ impl<'a> GLByteBuffer<'a> {
 /// Fixed-size typed VRAM buffer, optimized for bulk inserts.
 pub struct GLBuffer<'a, T> {
   pub byte_buffer: GLByteBuffer<'a>,
+  phantom: PhantomData<Vec<T>>,
 }
 
 impl<'a, T> GLBuffer<'a, T> {
@@ -175,6 +179,7 @@ impl<'a, T> GLBuffer<'a, T> {
   ) -> GLBuffer<'b, T> {
     GLBuffer {
       byte_buffer: GLByteBuffer::new(gl, capacity * mem::size_of::<T>()),
+      phantom: PhantomData,
     }
   }
 
@@ -280,6 +285,7 @@ pub struct VertexAttribData<'a> {
 
 pub struct ArrayHandle<'a> {
   pub gl_id: GLuint,
+  phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> ArrayHandle<'a> {
@@ -291,6 +297,7 @@ impl<'a> ArrayHandle<'a> {
 
     ArrayHandle {
       gl_id: gl_id,
+      phantom: PhantomData,
     }
   }
 }

@@ -2,6 +2,7 @@ use gl;
 use gl::types::*;
 use gl_context::GLContext;
 use std::default::Default;
+use std::marker::PhantomData;
 use std::ops::Add;
 use vertex_buffer::GLBuffer;
 
@@ -40,6 +41,7 @@ impl Add<u32> for TextureUnit {
 /// A GPU-allocated texture.
 pub struct TextureHandle<'a> {
   pub gl_id: GLuint,
+  phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> TextureHandle<'a> {
@@ -50,6 +52,7 @@ impl<'a> TextureHandle<'a> {
     }
     TextureHandle {
       gl_id: handle,
+      phantom: PhantomData,
     }
   }
 }

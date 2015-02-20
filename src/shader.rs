@@ -6,10 +6,12 @@ use std::collections::hash_map::Entry;
 use std::ffi::CString;
 use std::iter::repeat;
 use std::ptr;
+use std::marker::PhantomData;
 use std::str;
 
 pub struct ProgramHandle<'a> {
   pub gl_id: GLuint,
+  phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> ProgramHandle<'a> {
@@ -22,6 +24,7 @@ impl<'a> ProgramHandle<'a> {
 
     ProgramHandle {
       gl_id: gl_id,
+      phantom: PhantomData,
     }
   }
 }
@@ -37,14 +40,15 @@ impl<'a> Drop for ProgramHandle<'a> {
 
 pub struct ShaderHandle<'a> {
   pub gl_id: GLuint,
+  phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> ShaderHandle<'a> {
-  pub fn compile_from(
+  pub fn compile_from<'b:'a>(
     _gl: &'a GLContext,
     shader_source: String,
     typ: GLenum
-  ) -> ShaderHandle<'a> {
+  ) -> ShaderHandle<'b> {
     let gl_id = unsafe {
       gl::CreateShader(typ)
     };
@@ -53,7 +57,7 @@ impl<'a> ShaderHandle<'a> {
 
     // Attempt to compile the shader
     {
-      let c_str = CString::from_slice(shader_source.as_bytes());
+      let c_str = CString::new(shader_source.as_bytes()).unwrap();
       let ptr = c_str.as_ptr() as *const i8;
       unsafe {
         gl::ShaderSource(gl_id, 1, &ptr, ptr::null());
@@ -85,6 +89,7 @@ impl<'a> ShaderHandle<'a> {
 
     ShaderHandle {
       gl_id: gl_id,
+      phantom: PhantomData,
     }
   }
 }
@@ -167,7 +172,7 @@ impl<'a> Shader<'a> {
     match self.uniforms.entry(s_name.clone()) {
       Entry::Occupied(entry) => *entry.get(),
       Entry::Vacant(entry) => {
-        let c_name = CString::from_slice(name.as_bytes());
+        let c_name = CString::new(name.as_bytes()).unwrap();
         let ptr = c_name.as_ptr() as *const i8;
         let loc = unsafe {
           gl::GetUniformLocation(self.handle.gl_id, ptr)
