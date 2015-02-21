@@ -1,3 +1,5 @@
+#![feature(collections, old_io, std_misc)]
+
 extern crate gl;
 extern crate sdl2;
 extern crate yaglw;
