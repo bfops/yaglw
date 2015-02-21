@@ -72,7 +72,7 @@ pub struct Texture2D<'a> {
 }
 
 impl<'a> Texture2D<'a> {
-  pub fn new(gl: &'a GLContext) -> Texture2D<'a> {
+  pub fn new<'b:'a>(gl: &'a GLContext) -> Texture2D<'b> {
     Texture2D {
       handle: TextureHandle::new(gl),
     }
