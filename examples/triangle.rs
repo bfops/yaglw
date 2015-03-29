@@ -5,7 +5,7 @@ extern crate sdl2;
 extern crate yaglw;
 
 use gl::types::*;
-use sdl2::event::Event;
+use sdl2::event::{Event, EventPump};
 use std::mem;
 use std::time::duration::Duration;
 use std::old_io::timer;
@@ -46,7 +46,9 @@ const FRAGMENT_SHADER: &'static str = "
 ";
 
 pub fn main() {
+  let sdl = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
   let window = make_window();
+  let mut event_pump = sdl.event_pump();
 
   let _sdl_gl_context = window.gl_create_context().unwrap();
 
@@ -116,7 +118,7 @@ pub fn main() {
     },
   }
 
-  while !quit_event() {
+  while !quit_event(&mut event_pump) {
     gl.clear_buffer();
     vao.draw(&mut gl);
     // swap buffers
@@ -127,8 +129,6 @@ pub fn main() {
 }
 
 fn make_window() -> sdl2::video::Window {
-  sdl2::init(sdl2::INIT_EVERYTHING);
-
   sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLContextMajorVersion, 3);
   sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLContextMinorVersion, 0);
   sdl2::video::gl_set_attribute(
@@ -146,16 +146,16 @@ fn make_window() -> sdl2::video::Window {
   ).unwrap()
 }
 
-fn quit_event() -> bool {
+fn quit_event(event_pump: &mut EventPump) -> bool {
   loop {
-    match sdl2::event::poll_event() {
-      Event::None => {
+    match event_pump.poll_event() {
+      None => {
         return false;
       },
-      Event::Quit{..} => {
+      Some(Event::Quit{..}) => {
         return true;
       }
-      Event::AppTerminating{..} => {
+      Some(Event::AppTerminating{..}) => {
         return true;
       }
       _ => {},

@@ -3,6 +3,7 @@ use gl::types::*;
 use gl_context::GLContext;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::convert::AsRef;
 use std::ffi::CString;
 use std::iter::repeat;
 use std::ptr;
@@ -82,7 +83,7 @@ impl<'a> ShaderHandle<'a> {
         gl::GetShaderInfoLog(gl_id, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
       }
       let error_string =
-        str::from_utf8(buf.as_slice())
+        str::from_utf8(buf.as_ref())
           .unwrap_or_else(|_| panic!("ShaderInfoLog not valid utf8"));
       panic!("error compiling 0x{:x} shader: {}", typ, error_string);
     }
@@ -146,7 +147,7 @@ impl<'a> Shader<'a> {
         gl::GetProgramInfoLog(handle.gl_id, len, ptr::null_mut(), buf.as_mut_ptr() as *mut GLchar);
       }
       let error_string =
-        str::from_utf8(buf.as_slice())
+        str::from_utf8(buf.as_ref())
           .unwrap_or_else(|_| panic!("ProgramInfoLog not valid utf8"));
       panic!("{}", error_string);
     }
