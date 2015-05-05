@@ -12,6 +12,7 @@ path = "src/lib.rs"
 
 [dependencies]
 log = "*"
+num = "*"
 
 [dependencies.gl]
 git = "https://github.com/bjz/gl-rs"

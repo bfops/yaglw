@@ -1,12 +1,13 @@
 use gl;
 use gl::types::*;
 use gl_context::GLContext;
-use shader::*;
+use num;
 use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem;
-use std::num;
 use std::ptr;
+
+use shader::*;
 
 /// Gets the id number for a given input of the shader program.
 #[allow(non_snake_case)]
@@ -246,7 +247,7 @@ pub enum GLType {
 
 impl GLType {
   pub fn size(&self) -> u32 {
-    num::cast(
+    num::NumCast::from(
       match *self {
         GLType::Float => mem::size_of::<GLfloat>(),
         GLType::UInt  => mem::size_of::<GLuint>(),

@@ -1,15 +1,14 @@
 #![deny(warnings)]
 
 #![feature(collections)]
-#![feature(convert)]
 #![feature(core)]
 #![feature(libc)]
-#![feature(unsafe_destructor)]
 
 extern crate gl;
 extern crate libc;
 #[macro_use]
 extern crate log;
+extern crate num;
 
 pub mod gl_context;
 pub mod shader;
