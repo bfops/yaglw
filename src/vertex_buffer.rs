@@ -40,7 +40,6 @@ impl<'a> BufferHandle<'a> {
   }
 }
 
-#[unsafe_destructor]
 impl<'a> Drop for BufferHandle<'a> {
   fn drop(&mut self) {
     unsafe {
@@ -302,7 +301,6 @@ impl<'a> ArrayHandle<'a> {
   }
 }
 
-#[unsafe_destructor]
 impl<'a> Drop for ArrayHandle<'a> {
   fn drop(&mut self) {
     unsafe {

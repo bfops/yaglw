@@ -57,7 +57,6 @@ impl<'a> TextureHandle<'a> {
   }
 }
 
-#[unsafe_destructor]
 impl<'a> Drop for TextureHandle<'a> {
   fn drop(&mut self) {
     unsafe {

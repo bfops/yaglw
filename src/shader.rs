@@ -30,7 +30,6 @@ impl<'a> ProgramHandle<'a> {
   }
 }
 
-#[unsafe_destructor]
 impl<'a> Drop for ProgramHandle<'a> {
   fn drop(&mut self) {
     unsafe {
@@ -95,7 +94,6 @@ impl<'a> ShaderHandle<'a> {
   }
 }
 
-#[unsafe_destructor]
 impl<'a> Drop for ShaderHandle<'a> {
   fn drop(&mut self) {
     unsafe {
