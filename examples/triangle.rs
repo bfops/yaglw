@@ -1,4 +1,4 @@
-#![feature(collections, old_io, std_misc)]
+#![feature(collections)]
 
 extern crate gl;
 extern crate sdl2;
@@ -7,15 +7,13 @@ extern crate yaglw;
 use gl::types::*;
 use sdl2::event::{Event, EventPump};
 use std::mem;
-use std::time::duration::Duration;
-use std::old_io::timer;
 
 use yaglw::gl_context::GLContext;
 use yaglw::shader::Shader;
 use yaglw::vertex_buffer::{GLArray, GLBuffer, GLType, VertexAttribData, DrawMode};
 
 #[repr(C)]
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 struct Vertex {
   pub position: [GLfloat; 2],
   pub color: [GLfloat; 3],
@@ -47,7 +45,7 @@ const FRAGMENT_SHADER: &'static str = "
 
 pub fn main() {
   let sdl = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
-  let window = make_window();
+  let window = make_window(&sdl);
   let mut event_pump = sdl.event_pump();
 
   let _sdl_gl_context = window.gl_create_context().unwrap();
@@ -124,11 +122,11 @@ pub fn main() {
     // swap buffers
     window.gl_swap_window();
 
-    timer::sleep(Duration::milliseconds(10));
+    std::thread::sleep_ms(10);
   }
 }
 
-fn make_window() -> sdl2::video::Window {
+fn make_window(sdl: &sdl2::Sdl) -> sdl2::video::Window {
   sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLContextMajorVersion, 3);
   sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLContextMinorVersion, 0);
   sdl2::video::gl_set_attribute(
@@ -137,6 +135,7 @@ fn make_window() -> sdl2::video::Window {
   );
 
   sdl2::video::Window::new(
+    sdl,
     "Triangle",
     sdl2::video::WindowPos::PosCentered,
     sdl2::video::WindowPos::PosCentered,
