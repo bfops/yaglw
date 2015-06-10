@@ -42,7 +42,8 @@ const FRAGMENT_SHADER: &'static str = "
 ";
 
 pub fn main() {
-  let sdl = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
+  let mut sdl = sdl2::init().everything().build().unwrap();
+
   let window = make_window(&sdl);
   let mut event_pump = sdl.event_pump();
 
@@ -125,22 +126,21 @@ pub fn main() {
 }
 
 fn make_window(sdl: &sdl2::Sdl) -> sdl2::video::Window {
-  sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLContextMajorVersion, 3);
-  sdl2::video::gl_set_attribute(sdl2::video::GLAttr::GLContextMinorVersion, 0);
-  sdl2::video::gl_set_attribute(
-    sdl2::video::GLAttr::GLContextProfileMask,
-    sdl2::video::GLProfile::GLCoreProfile as i32,
-  );
+  sdl2::video::gl_attr::set_context_profile(sdl2::video::GLProfile::Core);
+  sdl2::video::gl_attr::set_context_version(3, 3);
 
-  sdl2::video::Window::new(
-    sdl,
-    "Triangle",
-    sdl2::video::WindowPos::PosCentered,
-    sdl2::video::WindowPos::PosCentered,
-    800,
-    600,
-    sdl2::video::OPENGL,
-  ).unwrap()
+  // Open the window as fullscreen at the current resolution.
+  let mut window =
+    sdl2::video::WindowBuilder::new(
+      &sdl,
+      "Triangle",
+      800, 600,
+    );
+
+  let window = window.position(0, 0);
+  window.opengl();
+
+  window.build().unwrap()
 }
 
 fn quit_event(event_pump: &mut EventPump) -> bool {
