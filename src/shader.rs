@@ -167,7 +167,7 @@ impl<'a> Shader<'a> {
     &mut self,
     name: &'static str,
   ) -> GLint {
-    let s_name = String::from_str(name);
+    let s_name = String::from(name);
     match self.uniforms.entry(s_name.clone()) {
       Entry::Occupied(entry) => *entry.get(),
       Entry::Vacant(entry) => {

@@ -1,5 +1,3 @@
-#![feature(collections)]
-
 extern crate gl;
 extern crate sdl2;
 extern crate yaglw;
@@ -95,7 +93,7 @@ pub fn main() {
     ((gl::FRAGMENT_SHADER, FRAGMENT_SHADER)),
   ];
 
-  let shader = Shader::new(&gl, components.iter().map(|&(ty, s)| (ty, String::from_str(s))));
+  let shader = Shader::new(&gl, components.iter().map(|&(ty, s)| (ty, String::from(s))));
   shader.use_shader(&mut gl);
 
   let vao =
