@@ -1,7 +1,8 @@
 #![deny(warnings)]
 
-#![feature(core)]
 #![feature(libc)]
+#![feature(raw)]
+
 
 extern crate gl;
 extern crate libc;
