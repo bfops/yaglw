@@ -1,6 +1,5 @@
 use gl;
 use gl::types::*;
-use std::marker;
 use std::mem;
 use std::raw;
 use std::str;
@@ -24,18 +23,14 @@ unsafe fn from_c_str<'a>(s: *const u8) -> &'a str {
   str::from_utf8_unchecked(mem::transmute(as_slice))
 }
 
-pub struct GLContext {
-  nocopy: marker::NoCopy,
-}
+pub struct GLContext;
 
 // TODO(bfops): Safely create GLContext from existing ones, e.g. sdl2::video::GLContext.
 impl GLContext {
   pub unsafe fn new() -> GLContext {
     // TODO(cgaebel): Have a thread-local variable checking whether or not
     // there is only one GLContext, and fail if there's more than one.
-    GLContext {
-      nocopy: marker::NoCopy,
-    }
+    GLContext
   }
 
   /// Stops the processing of any triangles hidden from view when rendering.
