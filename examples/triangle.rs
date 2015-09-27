@@ -3,7 +3,8 @@ extern crate sdl2;
 extern crate yaglw;
 
 use gl::types::*;
-use sdl2::event::{Event, EventPump};
+use sdl2::EventPump;
+use sdl2::event::Event;
 use std::mem;
 
 use yaglw::gl_context::GLContext;
@@ -18,7 +19,7 @@ struct Vertex {
 }
 
 const VERTEX_SHADER: &'static str = "
-  #version 130
+  #version 330
 
   in vec2 position;
   in vec3 color;
@@ -32,26 +33,31 @@ const VERTEX_SHADER: &'static str = "
 ";
 
 const FRAGMENT_SHADER: &'static str = "
-  #version 130
+  #version 330
 
   in vec3 v_color;
 
+  layout (location = 0) out vec4 frag_color;
+
   void main() {
-    gl_FragColor = vec4(v_color, 1.0);
+    frag_color = vec4(v_color, 1.0);
   }
 ";
 
 pub fn main() {
-  let mut sdl = sdl2::init().everything().build().unwrap();
+  let sdl = sdl2::init().unwrap();
 
-  let window = make_window(&sdl);
-  let mut event_pump = sdl.event_pump();
+  let _event = sdl.event().unwrap();
+  let video = sdl.video().unwrap();
+
+  let window = make_window(&video);
+  let mut event_pump = sdl.event_pump().unwrap();
 
   let _sdl_gl_context = window.gl_create_context().unwrap();
 
   // Load the OpenGL function pointers.
   gl::load_with(|s| unsafe {
-    mem::transmute(sdl2::video::gl_get_proc_address(s))
+    mem::transmute(video.gl_get_proc_address(s))
   });
 
   let mut gl = unsafe {
@@ -125,14 +131,14 @@ pub fn main() {
   }
 }
 
-fn make_window(sdl: &sdl2::Sdl) -> sdl2::video::Window {
-  sdl2::video::gl_attr::set_context_profile(sdl2::video::GLProfile::Core);
-  sdl2::video::gl_attr::set_context_version(3, 3);
+fn make_window(video: &sdl2::VideoSubsystem) -> sdl2::video::Window {
+  let gl_attr = video.gl_attr();
+  gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
+  gl_attr.set_context_version(3, 3);
 
   // Open the window as fullscreen at the current resolution.
   let mut window =
-    sdl2::video::WindowBuilder::new(
-      &sdl,
+    video.window(
       "Triangle",
       800, 600,
     );
