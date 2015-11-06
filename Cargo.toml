@@ -11,11 +11,9 @@ name = "yaglw"
 path = "src/lib.rs"
 
 [dependencies]
+gl = "*"
 log = "*"
 num = "*"
-
-[dependencies.gl]
-git = "https://github.com/bjz/gl-rs"
 
 [[example]]
 name = "triangle"
