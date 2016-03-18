@@ -407,7 +407,9 @@ impl<'a, T> GLArray<'a, T> {
   /// The array doesn't need to be bound.
   pub fn push(&mut self, gl: &mut GLContext, vs: &[T]) -> bool {
     let r = self.buffer.push(gl, vs);
-    self.length += vs.len();
+    if r {
+      self.length += vs.len();
+    }
     r
   }
 
