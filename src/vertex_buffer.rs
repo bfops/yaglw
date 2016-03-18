@@ -383,7 +383,9 @@ impl<'a, T> GLArray<'a, T> {
       err => warn!("OpenGL error 0x{:x}", err),
     }
 
-    assert_eq!(attrib_span as usize, mem::size_of::<T>());
+    if attrib_span as usize != mem::size_of::<T>() {
+      panic!("GLArray attribs don't describe the right number of bytes");
+    }
 
     let length = buffer.byte_buffer.length / mem::size_of::<T>();
 
