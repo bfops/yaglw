@@ -283,6 +283,55 @@ pub struct VertexAttribData<'a> {
   pub unit: GLType,
 }
 
+impl<'a> VertexAttribData<'a> {
+  pub fn apply(attribs: &[VertexAttribData<'a>], _gl: &mut GLContext, shader: &Shader) -> u32 {
+    let mut offset = 0;
+    let attrib_span = {
+      let mut attrib_span = 0;
+      for attrib in attribs.iter() {
+        attrib_span += attrib.size * attrib.unit.size();
+      }
+      attrib_span
+    };
+
+    for attrib in attribs {
+      let shader_attrib =
+        glGetAttribLocation(
+          shader.handle.gl_id,
+          attrib.name
+        );
+      assert!(shader_attrib != -1, "shader attribute \"{}\" not found", attrib.name);
+      let shader_attrib = shader_attrib as GLuint;
+
+      unsafe {
+        gl::EnableVertexAttribArray(shader_attrib);
+
+        if attrib.unit.is_integral() {
+          gl::VertexAttribIPointer(
+            shader_attrib,
+            attrib.size as i32,
+            attrib.unit.gl_enum(),
+            attrib_span as i32,
+            ptr::null().offset(offset),
+          );
+        } else {
+          gl::VertexAttribPointer(
+            shader_attrib,
+            attrib.size as i32,
+            attrib.unit.gl_enum(),
+            gl::FALSE as GLboolean,
+            attrib_span as i32,
+            ptr::null().offset(offset),
+          );
+        }
+      }
+      offset += (attrib.size * attrib.unit.size()) as isize;
+    }
+
+    attrib_span
+  }
+}
+
 pub struct ArrayHandle<'a> {
   pub gl_id: GLuint,
   phantom: PhantomData<&'a ()>,
@@ -336,55 +385,14 @@ impl<'a, T> GLArray<'a, T> {
       gl::BindVertexArray(handle.gl_id);
     }
 
-    let mut offset = 0;
-    let attrib_span = {
-      let mut attrib_span = 0;
-      for attrib in attribs.iter() {
-        attrib_span += attrib.size * attrib.unit.size();
-      }
-      attrib_span
-    };
-    for attrib in attribs.iter() {
-      let shader_attrib =
-        glGetAttribLocation(
-          shader_program.handle.gl_id,
-          attrib.name
-        );
-      assert!(shader_attrib != -1, "shader attribute \"{}\" not found", attrib.name);
-      let shader_attrib = shader_attrib as GLuint;
-
-      unsafe {
-        gl::EnableVertexAttribArray(shader_attrib);
-
-        if attrib.unit.is_integral() {
-          gl::VertexAttribIPointer(
-            shader_attrib,
-            attrib.size as i32,
-            attrib.unit.gl_enum(),
-            attrib_span as i32,
-            ptr::null().offset(offset),
-          );
-        } else {
-          gl::VertexAttribPointer(
-            shader_attrib,
-            attrib.size as i32,
-            attrib.unit.gl_enum(),
-            gl::FALSE as GLboolean,
-            attrib_span as i32,
-            ptr::null().offset(offset),
-          );
-        }
-      }
-      offset += (attrib.size * attrib.unit.size()) as isize;
+    let attrib_span = VertexAttribData::apply(attribs, gl, shader_program);
+    if attrib_span as usize != mem::size_of::<T>() {
+      panic!("GLArray attribs don't describe the right number of bytes");
     }
 
     match unsafe { gl::GetError() } {
       gl::NO_ERROR => {},
       err => warn!("OpenGL error 0x{:x}", err),
-    }
-
-    if attrib_span as usize != mem::size_of::<T>() {
-      panic!("GLArray attribs don't describe the right number of bytes");
     }
 
     let length = buffer.byte_buffer.length / mem::size_of::<T>();
