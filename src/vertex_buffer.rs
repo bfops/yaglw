@@ -281,6 +281,7 @@ pub struct VertexAttribData<'a> {
   /// The size of this attribute, in the provided units.
   pub size: u32,
   pub unit: GLType,
+  pub divisor: u32,
 }
 
 impl<'a> VertexAttribData<'a> {
@@ -305,6 +306,7 @@ impl<'a> VertexAttribData<'a> {
 
       unsafe {
         gl::EnableVertexAttribArray(shader_attrib);
+        gl::VertexAttribDivisor(shader_attrib, attrib.divisor);
 
         if attrib.unit.is_integral() {
           gl::VertexAttribIPointer(

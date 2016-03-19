@@ -87,11 +87,13 @@ pub fn main() {
       name: "position",
       size: 2,
       unit: GLType::Float,
+      divisor: 0,
     },
     VertexAttribData {
       name: "color",
       size: 3,
       unit: GLType::Float,
+      divisor: 0,
     },
   ];
 
