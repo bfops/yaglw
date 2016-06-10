@@ -1,7 +1,6 @@
 use gl;
 use gl::types::*;
-use std::mem;
-use std::raw;
+use std;
 use std::str;
 
 unsafe fn from_c_str<'a>(s: *const u8) -> &'a str {
@@ -14,13 +13,7 @@ unsafe fn from_c_str<'a>(s: *const u8) -> &'a str {
     }
   }
 
-  let as_slice: raw::Slice<u8> =
-    raw::Slice {
-      data: s,
-      len: len,
-    };
-
-  str::from_utf8_unchecked(mem::transmute(as_slice))
+  str::from_utf8_unchecked(std::slice::from_raw_parts(s, len))
 }
 
 pub struct GLContext;
@@ -91,7 +84,7 @@ impl GLContext {
       let opengl_version = gl::GetString(gl::VERSION);
       let glsl_version = gl::GetString(gl::SHADING_LANGUAGE_VERSION);
       info!(
-        "OpenGL version: {}", 
+        "OpenGL version: {}",
         from_c_str(opengl_version),
       );
       info!(
