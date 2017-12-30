@@ -3,6 +3,7 @@ use gl::types::*;
 use gl_context::GLContext;
 use num;
 use std::ffi::CString;
+use std::os::raw::c_void;
 use std::marker::PhantomData;
 use std::mem;
 use std::ptr;
@@ -314,7 +315,7 @@ impl<'a> VertexAttribData<'a> {
             attrib.size as i32,
             attrib.unit.gl_enum(),
             attrib_span as i32,
-            ptr::null().offset(offset),
+            (ptr::null() as *const c_void).offset(offset),
           );
         } else {
           gl::VertexAttribPointer(
@@ -323,7 +324,7 @@ impl<'a> VertexAttribData<'a> {
             attrib.unit.gl_enum(),
             gl::FALSE as GLboolean,
             attrib_span as i32,
-            ptr::null().offset(offset),
+            (ptr::null() as *const c_void).offset(offset),
           );
         }
       }
