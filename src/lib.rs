@@ -1,7 +1,5 @@
 #![deny(warnings)]
 
-#![feature(libc)]
-
 extern crate gl;
 extern crate libc;
 #[macro_use]

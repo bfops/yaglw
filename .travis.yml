@@ -1,5 +1,7 @@
 language: rust
-rust: nightly
+rust:
+  - stable
+  - nightly
 
 before_install:
   - sudo apt-add-repository --yes ppa:zoogie/sdl2-snapshots
